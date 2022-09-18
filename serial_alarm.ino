@@ -38,9 +38,11 @@ shHandle set_time_mode;          // режим настройки времени
 shHandle display_guard;          // вывод данных на экран
 shHandle alarm_guard;            // отслеживание будильника
 shHandle alarm_buzzer;           // пищалка будильника
-shHandle show_temp_mode;         // режим показа температуры
+#ifdef USE_TEMP_DATA
+shHandle show_temp_mode; // режим показа температуры
 #ifdef USE_DS18B20
 shHandle ds18b20_guard; // опрос датчика DS18b20
+#endif
 #endif
 #ifdef USE_LIGHT_SENSOR
 shHandle light_sensor_guard; // отслеживание показаний датчика света
@@ -174,7 +176,7 @@ void checkSetButton()
 
 void checkUDbtn(clcButton &btn)
 {
-  switch (btn.getButtonState())
+  switch (btn.getLastState())
   {
   case BTN_DOWN:
   case BTN_DBLCLICK:
@@ -191,16 +193,18 @@ void checkUDbtn(clcButton &btn)
 
 void checkUpDownButton()
 {
+  btnUp.getButtonState();
+  btnDown.getButtonState();
   switch (displayMode)
   {
+#ifdef USE_TEMP_DATA
   case DISPLAY_MODE_SHOW_TIME:
-    if (btnUp.getButtonState() == BTN_ONECLICK)
+    if (btnUp.getLastState() == BTN_ONECLICK)
     {
       displayMode = DISPLAY_MODE_SHOW_TEMP;
     }
-    // опрашивается исключительно чтобы срабатывала на отключение сигнала будильника
-    btnDown.getButtonState();
     break;
+#endif
   case DISPLAY_MODE_SET_HOUR:
   case DISPLAY_MODE_SET_MINUTE:
   case DISPLAY_MODE_SET_ALARM_HOUR_1:
@@ -212,12 +216,14 @@ void checkUpDownButton()
     checkUDbtn(btnUp);
     checkUDbtn(btnDown);
     break;
+#ifdef USE_TEMP_DATA
   case DISPLAY_MODE_SHOW_TEMP:
     if (btnUp.getButtonState() == BTN_ONECLICK)
     {
       returnToDefMode();
     }
     break;
+#endif
   default:
     break;
   }
@@ -227,6 +233,10 @@ void checkUpDownButton()
 void rtcNow()
 {
   curTime = RTC.now();
+  if (displayMode == DISPLAY_MODE_SHOW_TIME)
+  {
+    disp.showTime(curTime.hour(), curTime.minute(), blink_flag);
+  }
 }
 
 void blink()
@@ -262,10 +272,12 @@ void returnToDefMode()
   case DISPLAY_MODE_ALARM_ON_OFF:
     btnSet.setBtnFlag(BTN_FLAG_EXIT);
     break;
+#ifdef USE_TEMP_DATA
   case DISPLAY_MODE_SHOW_TEMP:
     displayMode = DISPLAY_MODE_SHOW_TIME;
     tasks.stopTask(show_temp_mode);
     break;
+#endif
   default:
     break;
   }
@@ -492,6 +504,7 @@ void checkDS18b20()
 }
 #endif
 
+#ifdef USE_TEMP_DATA
 void showTemp()
 {
   if (!tasks.getTaskState(show_temp_mode))
@@ -506,6 +519,7 @@ void showTemp()
   disp.showTemp(int(clock.getTemperature()));
 #endif
 }
+#endif
 
 void setDisp()
 {
@@ -574,11 +588,6 @@ void setBrightness()
 #endif
 
 // ===================================================
-void showTime(DateTime dt)
-{
-  disp.showTime(dt.hour(), dt.minute(), blink_flag);
-}
-
 void showTimeData(byte hour, byte minute)
 {
   // если наступило время блинка и кнопки Up/Down не нажаты, то стереть соответствующие разряды; при нажатых кнопках Up/Down во время изменения данных ничего не мигает
@@ -673,7 +682,7 @@ void checkData(byte &dt, byte min, byte max, byte x, bool toUp)
   {
     dt = min;
   }
-  if (dt > max)
+  else if (dt > max)
   {
     dt = max;
   }
@@ -697,14 +706,15 @@ void setDisplay()
       showTimeSetting();
     }
     break;
+#ifdef USE_TEMP_DATA
   case DISPLAY_MODE_SHOW_TEMP:
     if (!tasks.getTaskState(show_temp_mode))
     {
       showTemp();
     }
     break;
+#endif
   default:
-    showTime(curTime);
     break;
   }
 }
@@ -732,12 +742,15 @@ void setup()
 #endif
 
   // ==== задачи =======================================
-  byte task_count = 8;
+  byte task_count = 7;
 #ifdef USE_LIGHT_SENSOR
   task_count++;
 #endif
+#ifdef USE_TEMP_DATA
+  task_count++;
 #ifdef USE_DS18B20
   task_count++;
+#endif
 #endif
   tasks.init(task_count);
 
@@ -745,10 +758,12 @@ void setup()
   blink_timer = tasks.addTask(500, blink);
   return_to_default_mode = tasks.addTask(AUTO_EXIT_TIMEOUT * 1000ul, returnToDefMode, false);
   set_time_mode = tasks.addTask(100, showTimeSetting, false);
+#ifdef USE_TEMP_DATA
+  show_temp_mode = tasks.addTask(500, showTemp, false);
 #ifdef USE_DS18B20
   ds18b20_guard = tasks.addTask(3000, checkDS18b20);
 #endif
-  show_temp_mode = tasks.addTask(500, showTemp, false);
+#endif
   alarm_guard = tasks.addTask(200, checkAlarm);
   alarm_buzzer = tasks.addTask(50, runAlarmBuzzer, false);
   display_guard = tasks.addTask(50, setDisp);

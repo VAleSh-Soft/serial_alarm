@@ -119,7 +119,11 @@ public:
     state = (AlarmState)read_eeprom_8(ALARM_STATE);
   }
 
-  // первоначальное определение точки следующего срабатывания будильника при включении или при изменении настроек будильника
+  /**
+   * @brief первоначальное определение точки следующего срабатывания будильника при включении или при изменении настроек будильника
+   *
+   * @param _time текущее время
+   */
   void init(DateTime _time)
   {
     uint16_t p1 = getAlarmPoint1();
@@ -142,28 +146,79 @@ public:
     setNextPoint(x);
   }
 
+  /**
+   * @brief получение текущего состояния будильника
+   *
+   * @return AlarmState
+   */
   AlarmState getAlarmState() { return (state); }
 
+  /**
+   * @brief установка текущего состояния будильника
+   *
+   * @param _state новое значение состояния будильника
+   */
   void setAlarmState(AlarmState _state) { state = _state; }
 
+  /**
+   * @brief получение информации о состоянии будильника - включен/выключен
+   *
+   * @return true
+   * @return false
+   */
   bool getOnOffAlarm() { return (bool)read_eeprom_8(ALARM_STATE); }
 
+  /**
+   * @brief включение/выключение будильника
+   *
+   * @param _state флаг для установки состояния будильника
+   */
   void setOnOffAlarm(bool _state)
   {
     write_eeprom_8(ALARM_STATE, (byte)_state);
     state = (AlarmState)_state;
   }
 
+  /**
+   * @brief получение времени перехода будильника в активный режим
+   *
+   * @return uint16_t время в минутах от начала суток
+   */
   uint16_t getAlarmPoint1() { return (read_eeprom_16(ALARM_POINT_1)); }
 
+  /**
+   * @brief установка времени перехода будильника в активный режим
+   *
+   * @param _time время в минутах от начала суток
+   */
   void setAlarmPoint1(uint16_t _time) { write_eeprom_16(ALARM_POINT_1, _time); }
 
+  /**
+   * @brief получение времени перехода будильника в неактивный режим
+   *
+   * @return uint16_t время в минутах от начала суток
+   */
   uint16_t getAlarmPoint2() { return (read_eeprom_16(ALARM_POINT_2)); }
 
+  /**
+   * @brief установка времени перехода будильника в неактивный режим
+   *
+   * @param _time время в минутах от начала суток
+   */
   void setAlarmPoint2(uint16_t _time) { write_eeprom_16(ALARM_POINT_2, _time); }
 
+  /**
+   * @brief получение действующего интервала срабатывания будильника (минут)
+   *
+   * @return uint16_t
+   */
   uint16_t getAlarmInterval() { return (read_eeprom_16(ALARM_INTERVAL)); }
 
+  /**
+   * @brief установка интервала срабатывания будильника
+   *
+   * @param _time устанавливаемый интервал в минутах
+   */
   void setAlarmInterval(byte _time)
   {
     if (_time > 180)
@@ -173,6 +228,11 @@ public:
     write_eeprom_16(ALARM_INTERVAL, _time);
   }
 
+  /**
+   * @brief проверка текущего состояния будильника
+   *
+   * @param _time текущее время
+   */
   void tick(DateTime _time)
   {
     uint16_t tm = _time.hour() * 60 + _time.minute();
