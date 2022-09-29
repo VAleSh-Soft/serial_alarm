@@ -108,7 +108,7 @@ public:
     {
       write_eeprom_16(ALARM_POINT_1, 0);
     }
-    if (read_eeprom_16(ALARM_POINT_1) > MAX_DATA)
+    if (read_eeprom_16(ALARM_POINT_2) > MAX_DATA)
     {
       write_eeprom_16(ALARM_POINT_2, 0);
     }

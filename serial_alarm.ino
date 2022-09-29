@@ -70,7 +70,6 @@ public:
     shButton::setTimeoutOfLongClick(1000);
     shButton::setLongClickMode(LCM_ONLYONCE);
     shButton::setVirtualClickOn(true);
-    shButton::setTimeoutOfDebounce(50);
   }
 
   ButtonFlag getBtnFlag()
@@ -218,7 +217,7 @@ void checkUpDownButton()
     break;
 #ifdef USE_TEMP_DATA
   case DISPLAY_MODE_SHOW_TEMP:
-    if (btnUp.getButtonState() == BTN_ONECLICK)
+    if (btnUp.getLastState() == BTN_ONECLICK)
     {
       returnToDefMode();
     }
