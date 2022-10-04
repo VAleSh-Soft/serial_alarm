@@ -1,4 +1,5 @@
 #include <Wire.h>
+#include <EEPROM.h>
 #include <DS3231.h>        // https://github.com/NorthernWidget/DS3231
 #include <shButton.h>      // https://github.com/VAleSh-Soft/shButton
 #include <shTaskManager.h> // https://github.com/VAleSh-Soft/shTaskManager
@@ -10,11 +11,9 @@
 #endif
 
 // ==== настройки ====================================
-#define ALARM_DURATION 60        // продолжительность сигнала будильника, секунд
-#define MIN_DISPLAY_BRIGHTNESS 1 // минимальная яркость дисплея, 1-7
-#define MAX_DISPLAY_BRIGHTNESS 7 // максимальная яркость дисплея, 1-7
-#define LIGHT_THRESHOLD 300      // порог переключения для датчика света
-#define AUTO_EXIT_TIMEOUT 6      // время автоматического возврата в режим показа текущего времени из любых других режимов при отсутствии активности пользователя, секунд
+#define ALARM_DURATION 60   // продолжительность сигнала будильника, секунд
+#define LIGHT_THRESHOLD 300 // порог переключения для датчика света
+#define AUTO_EXIT_TIMEOUT 6 // время автоматического возврата в режим показа текущего времени из любых других режимов при отсутствии активности пользователя, секунд
 // ===================================================
 
 DisplayTM1637 disp(DISPLAY_CLK_PIN, DISPLAY_DAT_PIN);
@@ -46,6 +45,9 @@ shHandle ds18b20_guard; // опрос датчика DS18b20
 #endif
 #ifdef USE_LIGHT_SENSOR
 shHandle light_sensor_guard; // отслеживание показаний датчика света
+#endif
+#ifdef USE_SET_BRIGHTNESS_MODE
+shHandle set_brightness_mode; // режим настройки яркости экрана
 #endif
 
 DisplayMode displayMode = DISPLAY_MODE_SHOW_TIME;
@@ -134,6 +136,12 @@ void checkSetButton()
     case DISPLAY_MODE_SET_ALARM_MINUTE_2:
     case DISPLAY_MODE_SET_ALARM_INTERVAL:
     case DISPLAY_MODE_ALARM_ON_OFF:
+#ifdef USE_SET_BRIGHTNESS_MODE
+#ifdef USE_LIGHT_SENSOR
+    case DISPLAY_MODE_SET_BRIGHTNESS_MIN:
+#endif
+    case DISPLAY_MODE_SET_BRIGHTNESS_MAX:
+#endif
       btnSet.setBtnFlag(BTN_FLAG_NEXT);
       break;
     default:
@@ -196,14 +204,25 @@ void checkUpDownButton()
   btnDown.getButtonState();
   switch (displayMode)
   {
-#ifdef USE_TEMP_DATA
   case DISPLAY_MODE_SHOW_TIME:
+#ifdef USE_TEMP_DATA
     if (btnUp.getLastState() == BTN_ONECLICK)
     {
       displayMode = DISPLAY_MODE_SHOW_TEMP;
     }
-    break;
 #endif
+#ifdef USE_SET_BRIGHTNESS_MODE
+    if (btnUp.isSecondButtonPressed(btnDown, BTN_LONGCLICK) ||
+        btnDown.isSecondButtonPressed(btnUp, BTN_LONGCLICK))
+    {
+#ifdef USE_LIGHT_SENSOR
+      displayMode = DISPLAY_MODE_SET_BRIGHTNESS_MIN;
+#else
+      displayMode = DISPLAY_MODE_SET_BRIGHTNESS_MAX;
+#endif
+    }
+#endif
+    break;
   case DISPLAY_MODE_SET_HOUR:
   case DISPLAY_MODE_SET_MINUTE:
   case DISPLAY_MODE_SET_ALARM_HOUR_1:
@@ -212,8 +231,20 @@ void checkUpDownButton()
   case DISPLAY_MODE_SET_ALARM_MINUTE_2:
   case DISPLAY_MODE_SET_ALARM_INTERVAL:
   case DISPLAY_MODE_ALARM_ON_OFF:
-    checkUDbtn(btnUp);
-    checkUDbtn(btnDown);
+#ifdef USE_SET_BRIGHTNESS_MODE
+#ifdef USE_LIGHT_SENSOR
+  case DISPLAY_MODE_SET_BRIGHTNESS_MIN:
+#endif
+  case DISPLAY_MODE_SET_BRIGHTNESS_MAX:
+#endif
+    if (!btnDown.isButtonClosed())
+    {
+      checkUDbtn(btnUp);
+    }
+    if (!btnUp.isButtonClosed())
+    {
+      checkUDbtn(btnDown);
+    }
     break;
 #ifdef USE_TEMP_DATA
   case DISPLAY_MODE_SHOW_TEMP:
@@ -269,6 +300,12 @@ void returnToDefMode()
   case DISPLAY_MODE_SET_ALARM_MINUTE_2:
   case DISPLAY_MODE_SET_ALARM_INTERVAL:
   case DISPLAY_MODE_ALARM_ON_OFF:
+#ifdef USE_SET_BRIGHTNESS_MODE
+#ifdef USE_LIGHT_SENSOR
+  case DISPLAY_MODE_SET_BRIGHTNESS_MIN:
+#endif
+  case DISPLAY_MODE_SET_BRIGHTNESS_MAX:
+#endif
     btnSet.setBtnFlag(BTN_FLAG_EXIT);
     break;
 #ifdef USE_TEMP_DATA
@@ -283,9 +320,9 @@ void returnToDefMode()
   tasks.stopTask(return_to_default_mode);
 }
 
-void stopSettintg()
+void stopSetting(shHandle task)
 {
-  tasks.stopTask(set_time_mode);
+  tasks.stopTask(task);
   tasks.stopTask(return_to_default_mode);
 }
 
@@ -365,28 +402,28 @@ void setDisplayMode(byte x)
     case DISPLAY_MODE_SET_ALARM_MINUTE_1:
     case DISPLAY_MODE_SET_ALARM_HOUR_2:
       displayMode = DisplayMode(byte(displayMode + 1));
-      stopSettintg();
+      stopSetting(set_time_mode);
       break;
     case DISPLAY_MODE_SET_ALARM_MINUTE_2:
       displayMode = (alarm.getAlarmPoint1() == alarm.getAlarmPoint2())
                         ? DISPLAY_MODE_SHOW_TIME
                         : DISPLAY_MODE_SET_ALARM_INTERVAL;
-      stopSettintg();
+      stopSetting(set_time_mode);
       break;
     case DISPLAY_MODE_ALARM_ON_OFF:
       displayMode = (x) ? DISPLAY_MODE_SET_ALARM_HOUR_1 : DISPLAY_MODE_SHOW_TIME;
-      stopSettintg();
+      stopSetting(set_time_mode);
       break;
     default:
       displayMode = DISPLAY_MODE_SHOW_TIME;
-      stopSettintg();
+      stopSetting(set_time_mode);
       break;
     }
   }
   else
   {
     displayMode = DISPLAY_MODE_SHOW_TIME;
-    stopSettintg();
+    stopSetting(set_time_mode);
   }
 }
 
@@ -573,16 +610,94 @@ void runAlarmBuzzer()
 #ifdef USE_LIGHT_SENSOR
 void setBrightness()
 {
+#ifdef USE_SET_BRIGHTNESS_MODE
+  if (tasks.getTaskState(set_brightness_mode))
+  {
+    return; // в режиме настройки яркости ничего не регулировать
+  }
+#endif
+
   static uint16_t b;
   b = (b * 2 + analogRead(LIGHT_SENSOR_PIN)) / 3;
   if (b < LIGHT_THRESHOLD)
   {
-    disp.setBrightness(MIN_DISPLAY_BRIGHTNESS);
+    disp.setBrightness(EEPROM.read(MIN_BRIGHTNESS_VALUE));
   }
   else if (b > LIGHT_THRESHOLD + 50)
   {
-    disp.setBrightness(MAX_DISPLAY_BRIGHTNESS);
+    disp.setBrightness(EEPROM.read(MAX_BRIGHTNESS_VALUE));
   }
+}
+#endif
+
+#ifdef USE_SET_BRIGHTNESS_MODE
+void showBrightnessSetting()
+{
+  static byte x = 0;
+
+  if (!tasks.getTaskState(set_brightness_mode))
+  {
+    tasks.startTask(set_brightness_mode);
+    tasks.startTask(return_to_default_mode);
+    x = EEPROM.read(MAX_BRIGHTNESS_VALUE);
+#ifdef USE_LIGHT_SENSOR
+    if (displayMode == DISPLAY_MODE_SET_BRIGHTNESS_MIN)
+    {
+      x = EEPROM.read(MIN_BRIGHTNESS_VALUE);
+    }
+#endif
+  }
+
+  // ==== опрос кнопок ===============================
+  if (btnSet.getBtnFlag() > BTN_FLAG_NONE)
+  {
+    switch (displayMode)
+    {
+    case DISPLAY_MODE_SET_BRIGHTNESS_MAX:
+      EEPROM.update(MAX_BRIGHTNESS_VALUE, x);
+      displayMode = DISPLAY_MODE_SHOW_TIME;
+      stopSetting(set_brightness_mode);
+      break;
+#ifdef USE_LIGHT_SENSOR
+    case DISPLAY_MODE_SET_BRIGHTNESS_MIN:
+      EEPROM.update(MIN_BRIGHTNESS_VALUE, x);
+      if (btnSet.getBtnFlag() == BTN_FLAG_NEXT)
+      {
+        displayMode = DISPLAY_MODE_SET_BRIGHTNESS_MAX;
+      }
+      else
+        displayMode = DISPLAY_MODE_SHOW_TIME;
+      stopSetting(set_brightness_mode);
+      break;
+#endif
+    default:
+      break;
+    }
+    btnSet.setBtnFlag(BTN_FLAG_NONE);
+  }
+
+  if ((btnUp.getBtnFlag() == BTN_FLAG_NEXT) || (btnDown.getBtnFlag() == BTN_FLAG_NEXT))
+  {
+    bool dir = btnUp.getBtnFlag() == BTN_FLAG_NEXT;
+    checkData(x, 1, 7, 1, dir);
+
+    btnUp.setBtnFlag(BTN_FLAG_NONE);
+    btnDown.setBtnFlag(BTN_FLAG_NONE);
+  }
+
+  // ==== вывод данных на экран ======================
+  disp.setBrightness(x);
+  byte y = 0;
+  y = 0b01111100;
+  disp.setDispData(0, y);
+#ifndef USE_LIGHT_SENSOR
+  y = 0x00;
+#else
+  y = (displayMode == DISPLAY_MODE_SET_BRIGHTNESS_MAX) ? 2 : 1;
+#endif
+  disp.setDispData(1, disp.encodeDigit(y));
+  disp.setDispData(2, disp.encodeDigit(x / 10));
+  disp.setDispData(3, disp.encodeDigit(x % 10));
 }
 #endif
 
@@ -713,6 +828,17 @@ void setDisplay()
     }
     break;
 #endif
+#ifdef USE_SET_BRIGHTNESS_MODE
+#ifdef USE_LIGHT_SENSOR
+  case DISPLAY_MODE_SET_BRIGHTNESS_MIN:
+#endif
+  case DISPLAY_MODE_SET_BRIGHTNESS_MAX:
+    if (!tasks.getTaskState(set_brightness_mode))
+    {
+      showBrightnessSetting();
+    }
+    break;
+#endif
   default:
     break;
   }
@@ -740,6 +866,16 @@ void setup()
   checkDS18b20();
 #endif
 
+  // проверить корректность заданных уровней яркости
+  byte x = EEPROM.read(MAX_BRIGHTNESS_VALUE);
+  x = ((x > 7) || (x == 0)) ? 7 : x;
+  EEPROM.update(MAX_BRIGHTNESS_VALUE, x);
+#ifdef USE_SET_BRIGHTNESS_MODE
+  x = EEPROM.read(MIN_BRIGHTNESS_VALUE);
+  x = ((x > 7) || (x == 0)) ? 1 : x;
+  EEPROM.update(MIN_BRIGHTNESS_VALUE, x);
+#endif
+
   // ==== задачи =======================================
   byte task_count = 7;
 #ifdef USE_LIGHT_SENSOR
@@ -750,6 +886,9 @@ void setup()
 #ifdef USE_DS18B20
   task_count++;
 #endif
+#endif
+#ifdef USE_SET_BRIGHTNESS_MODE
+  task_count++;
 #endif
   tasks.init(task_count);
 
@@ -770,6 +909,9 @@ void setup()
   light_sensor_guard = tasks.addTask(100, setBrightness);
 #else
   disp.setBrightness(MAX_DISPLAY_BRIGHTNESS);
+#endif
+#ifdef USE_SET_BRIGHTNESS_MODE
+  set_brightness_mode = tasks.addTask(100, showBrightnessSetting, false);
 #endif
 
   alarm.init(curTime);

@@ -4,6 +4,7 @@
 
 // ==== параметры условной компиляции ================
 #define USE_LIGHT_SENSOR // использовать или нет датчик света на пине А3 для регулировки яркости экрана
+#define USE_SET_BRIGHTNESS_MODE // использовать режим настройки минимального и максимального уровней яркости
 #define USE_TEMP_DATA // использовать или нет вывод температуры по клику кнопкой Up
 #ifdef USE_TEMP_DATA
 // #define USE_DS18B20 // использовать для вывода температуры датчик DS18b20
@@ -36,6 +37,10 @@
 
 // ==== EEPROM =======================================
 #define ALARM_EEPROM_INDEX 100 // индекс в EEPROM для сохранения настроек будильника
+#ifdef USE_SET_BRIGHTNESS_MODE
+#define MIN_BRIGHTNESS_VALUE 98 // индекс в EEPROM для сохранения  минимального значения яркости экрана
+#endif
+#define MAX_BRIGHTNESS_VALUE 99 // индекс в EEPROM для сохранения  максимального значение яркости экрана
 
 // ==== режимы экрана ================================
 enum DisplayMode : uint8_t
@@ -52,6 +57,14 @@ enum DisplayMode : uint8_t
 #ifdef USE_TEMP_DATA
   ,
   DISPLAY_MODE_SHOW_TEMP // режим вывода температуры
+#endif
+#ifdef USE_SET_BRIGHTNESS_MODE
+#ifdef USE_LIGHT_SENSOR
+  ,
+  DISPLAY_MODE_SET_BRIGHTNESS_MIN // режим настройки минимального уровня яркости экрана
+#endif
+  ,
+  DISPLAY_MODE_SET_BRIGHTNESS_MAX // режим настройки максимального уровня яркости экрана
 #endif
 };
 
@@ -77,6 +90,9 @@ void checkDS18b20();
 #endif
 #ifdef USE_LIGHT_SENSOR
 void setBrightness();
+#endif
+#ifdef USE_SET_BRIGHTNESS_MODE
+void showBrightnessSetting();
 #endif
 
 // ==== вывод данных =================================
