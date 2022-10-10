@@ -753,7 +753,8 @@ void showBrightnessSetting()
 #else
   y = (displayMode == DISPLAY_MODE_SET_BRIGHTNESS_MAX) ? 2 : 1;
 #endif
-  disp.setDispData(1, disp.encodeDigit(y));
+  y = disp.encodeDigit(y) | 0x80;
+  disp.setDispData(1, y);
   disp.setDispData(2, disp.encodeDigit(x / 10));
   disp.setDispData(3, disp.encodeDigit(x % 10));
 }
