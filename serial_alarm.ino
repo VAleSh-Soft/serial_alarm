@@ -30,13 +30,14 @@ DateTime curTime;
 
 shTaskManager tasks; // создаем список задач, количество задач укажем в setup()
 
-shHandle rtc_guard;              // опрос микросхемы RTC по таймеру, чтобы не дергать ее откуда попало
-shHandle blink_timer;            // блинк
-shHandle return_to_default_mode; // таймер автовозврата в режим показа времени из любого режима настройки
-shHandle set_time_mode;          // режим настройки времени
-shHandle display_guard;          // вывод данных на экран
-shHandle alarm_guard;            // отслеживание будильника
-shHandle alarm_buzzer;           // пищалка будильника
+shHandle rtc_guard;               // опрос микросхемы RTC по таймеру, чтобы не дергать ее откуда попало
+shHandle blink_timer;             // блинк
+shHandle return_to_default_mode;  // таймер автовозврата в режим показа времени из любого режима настройки
+shHandle set_time_mode;           // режим настройки времени
+shHandle display_guard;           // вывод данных на экран
+shHandle alarm_guard;             // отслеживание будильника
+shHandle alarm_buzzer;            // пищалка будильника
+shHandle show_alarm_setting_mode; // режим показа настроек будильника
 #ifdef USE_TEMP_DATA
 shHandle show_temp_mode; // режим показа температуры
 #ifdef USE_DS18B20
@@ -205,6 +206,10 @@ void checkUpDownButton()
   switch (displayMode)
   {
   case DISPLAY_MODE_SHOW_TIME:
+    if (btnDown.getLastState() == BTN_ONECLICK && alarm.getOnOffAlarm())
+    {
+      displayMode = DISPLAY_MODE_SHOW_ALARM_SETTING;
+    }
 #ifdef USE_TEMP_DATA
     if (btnUp.getLastState() == BTN_ONECLICK)
     {
@@ -244,6 +249,12 @@ void checkUpDownButton()
     if (!btnUp.isButtonClosed())
     {
       checkUDbtn(btnDown);
+    }
+    break;
+  case DISPLAY_MODE_SHOW_ALARM_SETTING:
+    if (btnDown.getLastState() == BTN_ONECLICK)
+    {
+      returnToDefMode();
     }
     break;
 #ifdef USE_TEMP_DATA
@@ -307,6 +318,10 @@ void returnToDefMode()
   case DISPLAY_MODE_SET_BRIGHTNESS_MAX:
 #endif
     btnSet.setBtnFlag(BTN_FLAG_EXIT);
+    break;
+  case DISPLAY_MODE_SHOW_ALARM_SETTING:
+    displayMode = DISPLAY_MODE_SHOW_TIME;
+    tasks.stopTask(show_alarm_setting_mode);
     break;
 #ifdef USE_TEMP_DATA
   case DISPLAY_MODE_SHOW_TEMP:
@@ -477,7 +492,7 @@ void showTimeSetting()
                 displayMode == DISPLAY_MODE_SET_ALARM_INTERVAL))
   {
     n++;
-    showSettingType();
+    showSettingType(displayMode);
     return;
   }
 
@@ -556,6 +571,49 @@ void showTemp()
 #endif
 }
 #endif
+
+void showAlarmSetting()
+{
+  static byte n = 0;
+  static byte k = 0;
+
+  if (!tasks.getTaskState(show_alarm_setting_mode))
+  {
+    tasks.startTask(show_alarm_setting_mode);
+    tasks.startTask(return_to_default_mode);
+    n = 0;
+    k = 0;
+  }
+
+  uint16_t x = 0;
+  DisplayMode m = DISPLAY_MODE_SET_ALARM_HOUR_1;
+  switch (k)
+  {
+  case 0:
+    m = DISPLAY_MODE_SET_ALARM_HOUR_1;
+    x = alarm.getAlarmPoint1();
+    break;
+  case 1:
+    m = DISPLAY_MODE_SET_ALARM_HOUR_2;
+    x = alarm.getAlarmPoint2();
+    break;
+  case 2:
+    m = DISPLAY_MODE_SET_ALARM_INTERVAL;
+    x = alarm.getAlarmInterval();
+    break;
+  }
+
+  (n < 8) ? showSettingType(m) : showTimeData(x / 60, x % 60);
+
+  if (++n > 19)
+  {
+    n = 0;
+    if (++k > 2)
+    {
+      returnToDefMode();
+    }
+  }
+}
 
 void setDisp()
 {
@@ -727,7 +785,9 @@ void showTimeData(byte hour, byte minute)
       break;
     }
   }
-  disp.showTime(hour, minute, (displayMode == DISPLAY_MODE_SET_ALARM_INTERVAL));
+  disp.showTime(hour, minute,
+                (displayMode == DISPLAY_MODE_SET_ALARM_INTERVAL ||
+                 displayMode == DISPLAY_MODE_SHOW_ALARM_SETTING));
 }
 
 void showAlarmState(byte _state)
@@ -745,12 +805,12 @@ void showAlarmState(byte _state)
   }
 }
 
-void showSettingType()
+void showSettingType(DisplayMode mode)
 {
   // DISPLAY_MODE_SET_ALARM_HOUR_1   - P1:
   // DISPLAY_MODE_SET_ALARM_HOUR_2   - P2:
   // DISPLAY_MODE_SET_ALARM_INTERVAL - It:
-  switch (displayMode)
+  switch (mode)
   {
   case DISPLAY_MODE_SET_ALARM_HOUR_1:
     disp.setDispData(0, 0b01110011);
@@ -820,6 +880,12 @@ void setDisplay()
       showTimeSetting();
     }
     break;
+  case DISPLAY_MODE_SHOW_ALARM_SETTING:
+    if (!tasks.getTaskState(show_alarm_setting_mode))
+    {
+      showAlarmSetting();
+    }
+    break;
 #ifdef USE_TEMP_DATA
   case DISPLAY_MODE_SHOW_TEMP:
     if (!tasks.getTaskState(show_temp_mode))
@@ -877,7 +943,7 @@ void setup()
 #endif
 
   // ==== задачи =======================================
-  byte task_count = 7;
+  byte task_count = 8;
 #ifdef USE_LIGHT_SENSOR
   task_count++;
 #endif
@@ -896,6 +962,7 @@ void setup()
   blink_timer = tasks.addTask(500, blink);
   return_to_default_mode = tasks.addTask(AUTO_EXIT_TIMEOUT * 1000ul, returnToDefMode, false);
   set_time_mode = tasks.addTask(100, showTimeSetting, false);
+  show_alarm_setting_mode = tasks.addTask(100, showAlarmSetting, false);
 #ifdef USE_TEMP_DATA
   show_temp_mode = tasks.addTask(500, showTemp, false);
 #ifdef USE_DS18B20
