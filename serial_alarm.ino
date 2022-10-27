@@ -460,7 +460,7 @@ void checkSettingData(byte &h, byte &m, bool dir)
     checkData(h, 1, true);
     break;
   case DISPLAY_MODE_SET_ALARM_INTERVAL:
-    checkData(h, 10, 180, 10, dir);
+    checkData(h, MIN_INTERVAL, MAX_INTERVAL, 10, dir);
     break;
   default:
     break;
@@ -749,7 +749,7 @@ void showBrightnessSetting()
   y = 0b01111100;
   disp.setDispData(0, y);
 #ifndef USE_LIGHT_SENSOR
-  y = 0x00;
+  y = 0b01010000;
 #else
   y = (displayMode == DISPLAY_MODE_SET_BRIGHTNESS_MAX) ? 2 : 1;
 #endif
@@ -937,7 +937,7 @@ void setup()
   byte x = EEPROM.read(MAX_BRIGHTNESS_VALUE);
   x = ((x > 7) || (x == 0)) ? 7 : x;
   EEPROM.update(MAX_BRIGHTNESS_VALUE, x);
-#ifdef USE_SET_BRIGHTNESS_MODE
+#ifdef USE_LIGHT_SENSOR
   x = EEPROM.read(MIN_BRIGHTNESS_VALUE);
   x = ((x > 7) || (x == 0)) ? 1 : x;
   EEPROM.update(MIN_BRIGHTNESS_VALUE, x);

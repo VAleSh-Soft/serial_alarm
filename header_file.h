@@ -37,7 +37,7 @@
 
 // ==== EEPROM =======================================
 #define ALARM_EEPROM_INDEX 100 // индекс в EEPROM для сохранения настроек будильника
-#ifdef USE_SET_BRIGHTNESS_MODE
+#ifdef USE_LIGHT_SENSOR
 #define MIN_BRIGHTNESS_VALUE 98 // индекс в EEPROM для сохранения  минимального значения яркости экрана
 #endif
 #define MAX_BRIGHTNESS_VALUE 99 // индекс в EEPROM для сохранения  максимального значение яркости экрана

@@ -3,7 +3,9 @@
 #include <DS3231.h>
 #include <EEPROM.h>
 
-#define MAX_DATA 1439 // максимальное количество минут для установки будильника (23 ч, 59 мин)
+#define MAX_DATA 1439    // максимальное количество минут для установки будильника (23 ч, 59 мин)
+#define MAX_INTERVAL 180 // максимальный интервал, минут
+#define MIN_INTERVAL 180 // минимальный интервал, минут
 
 enum IndexOffset : uint8_t // смещение от стартового индекса в EEPROM для хранения настроек
 /* общий размер настроек - 7 байт */
@@ -112,7 +114,8 @@ public:
     {
       write_eeprom_16(ALARM_POINT_2, 0);
     }
-    if (read_eeprom_16(ALARM_INTERVAL) > 180)
+    if ((read_eeprom_16(ALARM_INTERVAL) > MAX_INTERVAL) ||
+        (read_eeprom_16(ALARM_INTERVAL) < MIN_INTERVAL))
     {
       write_eeprom_16(ALARM_INTERVAL, 60);
     }
