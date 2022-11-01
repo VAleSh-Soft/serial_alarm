@@ -745,18 +745,13 @@ void showBrightnessSetting()
 
   // ==== вывод данных на экран ======================
   disp.setBrightness(x);
-  byte y = 0;
-  y = 0b01111100;
-  disp.setDispData(0, y);
-#ifndef USE_LIGHT_SENSOR
-  y = 0b01010000;
-#else
-  y = (displayMode == DISPLAY_MODE_SET_BRIGHTNESS_MAX) ? 2 : 1;
+  bool blink = !blink_flag && !btnUp.isButtonClosed() && !btnDown.isButtonClosed();
+  bool snr = false;
+#ifdef USE_LIGHT_SENSOR
+  snr = true;
 #endif
-  y = disp.encodeDigit(y) | 0x80;
-  disp.setDispData(1, y);
-  disp.setDispData(2, disp.encodeDigit(x / 10));
-  disp.setDispData(3, disp.encodeDigit(x % 10));
+  disp.showBrightnessData(x, blink, snr,
+                          displayMode != DISPLAY_MODE_SET_BRIGHTNESS_MAX);
 }
 #endif
 
