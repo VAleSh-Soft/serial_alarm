@@ -1,7 +1,6 @@
 #include <Wire.h>
 #include <EEPROM.h>
 #include <DS3231.h>        // https://github.com/NorthernWidget/DS3231
-#include <shButton.h>      // https://github.com/VAleSh-Soft/shButton
 #include <shTaskManager.h> // https://github.com/VAleSh-Soft/shTaskManager
 #include "header_file.h"
 #include "display_TM1637.h"
@@ -9,6 +8,9 @@
 #ifdef USE_DS18B20
 #include <OneWire.h> // https://github.com/PaulStoffregen/OneWire
 #endif
+
+#define USE_BUTTON_FLAG
+#include <shButton.h>      // https://github.com/VAleSh-Soft/shButton
 
 // ==== настройки ====================================
 #define ALARM_DURATION 60   // продолжительность сигнала будильника, секунд
@@ -55,34 +57,19 @@ DisplayMode displayMode = DISPLAY_MODE_SHOW_TIME;
 bool blink_flag = false; // флаг блинка, используется всем, что должно мигать
 
 // ==== класс кнопок с предварительной настройкой ====
-enum ButtonFlag : uint8_t
-{
-  BTN_FLAG_NONE, // флаг кнопки - ничего не делать
-  BTN_FLAG_NEXT, // флаг кнопки - изменить значение
-  BTN_FLAG_EXIT  // флаг кнопки - возврат в режим показа текущего времени
-};
+const uint8_t BTN_FLAG_NONE = 0; // флаг кнопки - ничего не делать
+const uint8_t BTN_FLAG_NEXT = 1; // флаг кнопки - изменить значение
+const uint8_t BTN_FLAG_EXIT = 2; // флаг кнопки - возврат в режим показа текущего времени
 
 class clcButton : public shButton
 {
 private:
-  ButtonFlag _flag = BTN_FLAG_NONE;
-
 public:
   clcButton(byte button_pin) : shButton(button_pin)
   {
     shButton::setTimeoutOfLongClick(1000);
     shButton::setLongClickMode(LCM_ONLYONCE);
     shButton::setVirtualClickOn(true);
-  }
-
-  ButtonFlag getBtnFlag()
-  {
-    return (_flag);
-  }
-
-  void setBtnFlag(ButtonFlag flag)
-  {
-    _flag = flag;
   }
 
   byte getButtonState()
@@ -143,7 +130,7 @@ void checkSetButton()
 #endif
     case DISPLAY_MODE_SET_BRIGHTNESS_MAX:
 #endif
-      btnSet.setBtnFlag(BTN_FLAG_NEXT);
+      btnSet.setButtonFlag(BTN_FLAG_NEXT);
       break;
     default:
       break;
@@ -173,7 +160,7 @@ void checkSetButton()
     case DISPLAY_MODE_SET_ALARM_MINUTE_2:
     case DISPLAY_MODE_SET_ALARM_INTERVAL:
     case DISPLAY_MODE_ALARM_ON_OFF:
-      btnSet.setBtnFlag(BTN_FLAG_EXIT);
+      btnSet.setButtonFlag(BTN_FLAG_EXIT);
       break;
     default:
       break;
@@ -188,12 +175,12 @@ void checkUDbtn(clcButton &btn)
   {
   case BTN_DOWN:
   case BTN_DBLCLICK:
-    btn.setBtnFlag(BTN_FLAG_NEXT);
+    btn.setButtonFlag(BTN_FLAG_NEXT);
     break;
   case BTN_LONGCLICK:
     if (displayMode != DISPLAY_MODE_ALARM_ON_OFF)
     {
-      btn.setBtnFlag(BTN_FLAG_NEXT);
+      btn.setButtonFlag(BTN_FLAG_NEXT);
     }
     break;
   }
@@ -317,7 +304,7 @@ void returnToDefMode()
 #endif
   case DISPLAY_MODE_SET_BRIGHTNESS_MAX:
 #endif
-    btnSet.setBtnFlag(BTN_FLAG_EXIT);
+    btnSet.setButtonFlag(BTN_FLAG_EXIT);
     break;
   case DISPLAY_MODE_SHOW_ALARM_SETTING:
     displayMode = DISPLAY_MODE_SHOW_TIME;
@@ -408,7 +395,7 @@ void saveData(byte h, byte m)
 
 void setDisplayMode(byte x)
 {
-  if (btnSet.getBtnFlag() == BTN_FLAG_NEXT)
+  if (btnSet.getButtonFlag() == BTN_FLAG_NEXT)
   {
     switch (displayMode)
     {
@@ -504,7 +491,7 @@ void showTimeSetting()
   }
 
   // опрос кнопок =====================
-  if (btnSet.getBtnFlag() > BTN_FLAG_NONE)
+  if (btnSet.getButtonFlag() > BTN_FLAG_NONE)
   {
     if (time_checked)
     {
@@ -512,15 +499,15 @@ void showTimeSetting()
       time_checked = false;
     }
     setDisplayMode(curHour);
-    btnSet.setBtnFlag(BTN_FLAG_NONE);
+    btnSet.setButtonFlag(BTN_FLAG_NONE);
   }
 
-  if ((btnUp.getBtnFlag() == BTN_FLAG_NEXT) || (btnDown.getBtnFlag() == BTN_FLAG_NEXT))
+  if ((btnUp.getButtonFlag() == BTN_FLAG_NEXT) || (btnDown.getButtonFlag() == BTN_FLAG_NEXT))
   {
-    checkSettingData(curHour, curMinute, (btnUp.getBtnFlag() == BTN_FLAG_NEXT));
+    checkSettingData(curHour, curMinute, (btnUp.getButtonFlag() == BTN_FLAG_NEXT));
     time_checked = true;
-    btnUp.setBtnFlag(BTN_FLAG_NONE);
-    btnDown.setBtnFlag(BTN_FLAG_NONE);
+    btnUp.setButtonFlag(BTN_FLAG_NONE);
+    btnDown.setButtonFlag(BTN_FLAG_NONE);
   }
 
   // вывод данных на экран ============
@@ -707,7 +694,7 @@ void showBrightnessSetting()
   }
 
   // ==== опрос кнопок ===============================
-  if (btnSet.getBtnFlag() > BTN_FLAG_NONE)
+  if (btnSet.getButtonFlag() > BTN_FLAG_NONE)
   {
     switch (displayMode)
     {
@@ -719,7 +706,7 @@ void showBrightnessSetting()
 #ifdef USE_LIGHT_SENSOR
     case DISPLAY_MODE_SET_BRIGHTNESS_MIN:
       EEPROM.update(MIN_BRIGHTNESS_VALUE, x);
-      if (btnSet.getBtnFlag() == BTN_FLAG_NEXT)
+      if (btnSet.getButtonFlag() == BTN_FLAG_NEXT)
       {
         displayMode = DISPLAY_MODE_SET_BRIGHTNESS_MAX;
       }
@@ -731,16 +718,16 @@ void showBrightnessSetting()
     default:
       break;
     }
-    btnSet.setBtnFlag(BTN_FLAG_NONE);
+    btnSet.setButtonFlag(BTN_FLAG_NONE);
   }
 
-  if ((btnUp.getBtnFlag() == BTN_FLAG_NEXT) || (btnDown.getBtnFlag() == BTN_FLAG_NEXT))
+  if ((btnUp.getButtonFlag() == BTN_FLAG_NEXT) || (btnDown.getButtonFlag() == BTN_FLAG_NEXT))
   {
-    bool dir = btnUp.getBtnFlag() == BTN_FLAG_NEXT;
+    bool dir = btnUp.getButtonFlag() == BTN_FLAG_NEXT;
     checkData(x, 1, 7, 1, dir);
 
-    btnUp.setBtnFlag(BTN_FLAG_NONE);
-    btnDown.setBtnFlag(BTN_FLAG_NONE);
+    btnUp.setButtonFlag(BTN_FLAG_NONE);
+    btnDown.setButtonFlag(BTN_FLAG_NONE);
   }
 
   // ==== вывод данных на экран ======================
