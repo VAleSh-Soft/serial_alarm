@@ -10,7 +10,7 @@
 #endif
 
 #define USE_BUTTON_FLAG
-#include <shButton.h>      // https://github.com/VAleSh-Soft/shButton
+#include <shButton.h> // https://github.com/VAleSh-Soft/shButton
 
 // ==== настройки ====================================
 #define ALARM_DURATION 60   // продолжительность сигнала будильника, секунд
@@ -491,7 +491,7 @@ void showTimeSetting()
   }
 
   // опрос кнопок =====================
-  if (btnSet.getButtonFlag() > BTN_FLAG_NONE)
+  if (btnSet.getButtonFlag(true) > BTN_FLAG_NONE)
   {
     if (time_checked)
     {
@@ -499,15 +499,13 @@ void showTimeSetting()
       time_checked = false;
     }
     setDisplayMode(curHour);
-    btnSet.setButtonFlag(BTN_FLAG_NONE);
   }
 
-  if ((btnUp.getButtonFlag() == BTN_FLAG_NEXT) || (btnDown.getButtonFlag() == BTN_FLAG_NEXT))
+  if ((btnUp.getButtonFlag() == BTN_FLAG_NEXT) ||
+      (btnDown.getButtonFlag(true) == BTN_FLAG_NEXT))
   {
-    checkSettingData(curHour, curMinute, (btnUp.getButtonFlag() == BTN_FLAG_NEXT));
+    checkSettingData(curHour, curMinute, (btnUp.getButtonFlag(true) == BTN_FLAG_NEXT));
     time_checked = true;
-    btnUp.setButtonFlag(BTN_FLAG_NONE);
-    btnDown.setButtonFlag(BTN_FLAG_NONE);
   }
 
   // вывод данных на экран ============
@@ -721,13 +719,11 @@ void showBrightnessSetting()
     btnSet.setButtonFlag(BTN_FLAG_NONE);
   }
 
-  if ((btnUp.getButtonFlag() == BTN_FLAG_NEXT) || (btnDown.getButtonFlag() == BTN_FLAG_NEXT))
+  if ((btnUp.getButtonFlag() == BTN_FLAG_NEXT) ||
+      (btnDown.getButtonFlag(true) == BTN_FLAG_NEXT))
   {
-    bool dir = btnUp.getButtonFlag() == BTN_FLAG_NEXT;
+    bool dir = btnUp.getButtonFlag(true) == BTN_FLAG_NEXT;
     checkData(x, 1, 7, 1, dir);
-
-    btnUp.setButtonFlag(BTN_FLAG_NONE);
-    btnDown.setButtonFlag(BTN_FLAG_NONE);
   }
 
   // ==== вывод данных на экран ======================
