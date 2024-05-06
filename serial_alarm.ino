@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include <EEPROM.h>
-#include <DS3231.h>        // https://github.com/NorthernWidget/DS3231
 #include <shTaskManager.h> // https://github.com/VAleSh-Soft/shTaskManager
+#include "shSimpleRTC.h"
 #include "header_file.h"
 #include "display_TM1637.h"
 #include "alarm.h"
@@ -19,16 +19,13 @@
 // ===================================================
 
 DisplayTM1637 disp(DISPLAY_CLK_PIN, DISPLAY_DAT_PIN);
-DS3231 clock; // SDA - A4, SCL - A5
-RTClib RTC;
+shSimpleRTC saClock; // SDA - A4, SCL - A5
 SerialAlarm alarm(ALARM_RED_PIN, ALARM_GREEN_PIN, ALARM_EEPROM_INDEX);
 #ifdef USE_DS18B20
 OneWire ds(DS18B20_PIN); // вход датчика DS18b20
 byte addr[8];            // адрес датчика температуры
 int temperature;
 #endif
-
-DateTime curTime;
 
 shTaskManager tasks; // создаем список задач, количество задач укажем в setup()
 
@@ -260,10 +257,10 @@ void checkUpDownButton()
 // ===================================================
 void rtcNow()
 {
-  curTime = RTC.now();
+  saClock.now();
   if (displayMode == DISPLAY_MODE_SHOW_TIME)
   {
-    disp.showTime(curTime.hour(), curTime.minute(), blink_flag);
+    disp.showTime(saClock.getCurTime().hour(), saClock.getCurTime().minute(), blink_flag);
   }
 }
 
@@ -386,7 +383,7 @@ void saveData(byte h, byte m)
   case DISPLAY_MODE_SET_ALARM_HOUR_2:
   case DISPLAY_MODE_SET_ALARM_MINUTE_2:
   case DISPLAY_MODE_SET_ALARM_INTERVAL:
-    alarm.init(curTime);
+    alarm.init(saClock.getCurTime());
     break;
   default:
     break;
@@ -486,12 +483,12 @@ void showTimeSetting()
   if (!time_checked && (displayMode == DISPLAY_MODE_SET_HOUR ||
                         displayMode == DISPLAY_MODE_SET_MINUTE))
   {
-    curHour = curTime.hour();
-    curMinute = curTime.minute();
+    curHour = saClock.getCurTime().hour();
+    curMinute = saClock.getCurTime().minute();
   }
 
   // опрос кнопок =====================
-  if (btnSet.getButtonFlag(true) > BTN_FLAG_NONE)
+  if (btnSet.getButtonFlag() > BTN_FLAG_NONE)
   {
     if (time_checked)
     {
@@ -499,6 +496,7 @@ void showTimeSetting()
       time_checked = false;
     }
     setDisplayMode(curHour);
+    btnSet.setButtonFlag(BTN_FLAG_NONE);
   }
 
   if ((btnUp.getButtonFlag() == BTN_FLAG_NEXT) ||
@@ -552,7 +550,7 @@ void showTemp()
 #ifdef USE_DS18B20
   disp.showTemp(temperature);
 #else
-  disp.showTemp(int(clock.getTemperature()));
+  disp.showTemp(saClock.getTemperature());
 #endif
 }
 #endif
@@ -607,7 +605,7 @@ void setDisp()
 
 void checkAlarm()
 {
-  alarm.tick(curTime);
+  alarm.tick(saClock.getCurTime());
   if (alarm.getAlarmState() == ALARM_YES && !tasks.getTaskState(alarm_buzzer))
   {
     runAlarmBuzzer();
@@ -813,9 +811,7 @@ void showSettingType(DisplayMode mode)
 // ===================================================
 void saveTime(byte hour, byte minute)
 {
-  clock.setHour(hour);
-  clock.setMinute(minute);
-  clock.setSecond(0);
+  saClock.setCurTime(hour, minute, 0);
 }
 
 // ===================================================
@@ -894,7 +890,7 @@ void setup()
 {
   // ==== часы =========================================
   Wire.begin();
-  clock.setClockMode(false); // 24-часовой режим
+  saClock.setClockMode(false); // 24-часовой режим
   rtcNow();
 
   // ==== кнопки Up/Down ===============================
@@ -960,7 +956,7 @@ void setup()
   set_brightness_mode = tasks.addTask(100, showBrightnessSetting, false);
 #endif
 
-  alarm.init(curTime);
+  alarm.init(saClock.getCurTime());
 }
 
 void loop()

@@ -1,6 +1,6 @@
 #pragma once
 #include <Arduino.h>
-#include <DS3231.h> // https://github.com/NorthernWidget/DS3231
+#include "shSimpleRTC.h"
 
 // ==== параметры условной компиляции ================
 #define USE_LIGHT_SENSOR        // использовать или нет датчик света на пине А3 для регулировки яркости экрана

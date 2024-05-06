@@ -1,4 +1,4 @@
-## serial_alarm v1.4.5
+## serial_alarm v1.4.6
 
 - [Описание](#описание)
 - [Управление](#управление)
@@ -83,9 +83,6 @@
 
 **shButton.h** - https://github.com/VAleSh-Soft/shButton<br>
 **shTaskManager.h** - https://github.com/VAleSh-Soft/shTaskManager<br>
-
-Для работы с модулем **DS3231** используется библиотека<br>
-**DS3231.h** - https://github.com/NorthernWidget/DS3231<br>
 
 Для работы с экраном используется библиотека<br>
 **TM1637Display.h** - https://github.com/avishorp/TM1637<br>
