@@ -62,11 +62,19 @@ class clcButton : public shButton
 {
 private:
 public:
-  clcButton(byte button_pin) : shButton(button_pin)
+  clcButton(byte button_pin, bool serial_mode = false) : shButton(button_pin)
   {
     shButton::setTimeoutOfLongClick(1000);
-    shButton::setLongClickMode(LCM_ONLYONCE);
     shButton::setVirtualClickOn(true);
+    if (serial_mode)
+    {
+      shButton::setLongClickMode(LCM_CLICKSERIES);
+      shButton::setIntervalOfSerial(100);
+    }
+    else
+    {
+      shButton::setLongClickMode(LCM_ONLYONCE);
+    }
   }
 
   byte getButtonState()
@@ -95,9 +103,9 @@ public:
 };
 // ===================================================
 
-clcButton btnSet(BTN_SET_PIN);   // кнопка Set - смена режима работы часов
-clcButton btnUp(BTN_UP_PIN);     // кнопка Up - изменение часов/минут в режиме настройки
-clcButton btnDown(BTN_DOWN_PIN); // кнопка Down - изменение часов/минут в режиме настройки
+clcButton btnSet(BTN_SET_PIN);         // кнопка Set - смена режима работы часов
+clcButton btnUp(BTN_UP_PIN, true);     // кнопка Up - изменение часов/минут в режиме настройки
+clcButton btnDown(BTN_DOWN_PIN, true); // кнопка Down - изменение часов/минут в режиме настройки
 
 // ===================================================
 void checkButton()
@@ -892,12 +900,6 @@ void setup()
   Wire.begin();
   saClock.setClockMode(false); // 24-часовой режим
   rtcNow();
-
-  // ==== кнопки Up/Down ===============================
-  btnUp.setLongClickMode(LCM_CLICKSERIES);
-  btnUp.setIntervalOfSerial(100);
-  btnDown.setLongClickMode(LCM_CLICKSERIES);
-  btnDown.setIntervalOfSerial(100);
 
 #ifdef USE_DS18B20
   // ==== датчик DS18b20 ===============================
