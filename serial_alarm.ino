@@ -23,7 +23,7 @@ shSimpleRTC saClock; // SDA - A4, SCL - A5
 SerialAlarm alarm(ALARM_RED_PIN, ALARM_GREEN_PIN, ALARM_EEPROM_INDEX);
 #ifdef USE_DS18B20
 OneWire ds(DS18B20_PIN); // вход датчика DS18b20
-byte addr[8];            // адрес датчика температуры
+uint8_t addr[8];            // адрес датчика температуры
 int temperature;
 #endif
 
@@ -58,11 +58,11 @@ const uint8_t BTN_FLAG_NONE = 0; // флаг кнопки - ничего не д
 const uint8_t BTN_FLAG_NEXT = 1; // флаг кнопки - изменить значение
 const uint8_t BTN_FLAG_EXIT = 2; // флаг кнопки - возврат в режим показа текущего времени
 
-class clcButton : public shButton
+class saButton : public shButton
 {
 private:
 public:
-  clcButton(byte button_pin, bool serial_mode = false) : shButton(button_pin)
+  saButton(uint8_t button_pin, bool serial_mode = false) : shButton(button_pin)
   {
     shButton::setTimeoutOfLongClick(1000);
     shButton::setVirtualClickOn(true);
@@ -77,9 +77,9 @@ public:
     }
   }
 
-  byte getButtonState()
+  uint8_t getButtonState()
   {
-    byte _state = shButton::getButtonState();
+    uint8_t _state = shButton::getButtonState();
     switch (_state)
     {
     case BTN_DOWN:
@@ -103,9 +103,9 @@ public:
 };
 // ===================================================
 
-clcButton btnSet(BTN_SET_PIN);         // кнопка Set - смена режима работы часов
-clcButton btnUp(BTN_UP_PIN, true);     // кнопка Up - изменение часов/минут в режиме настройки
-clcButton btnDown(BTN_DOWN_PIN, true); // кнопка Down - изменение часов/минут в режиме настройки
+saButton btnSet(BTN_SET_PIN);         // кнопка Set - смена режима работы часов
+saButton btnUp(BTN_UP_PIN, true);     // кнопка Up - изменение часов/минут в режиме настройки
+saButton btnDown(BTN_DOWN_PIN, true); // кнопка Down - изменение часов/минут в режиме настройки
 
 // ===================================================
 void checkButton()
@@ -174,7 +174,7 @@ void checkSetButton()
   }
 }
 
-void checkUDbtn(clcButton &btn)
+void checkUDbtn(saButton &btn)
 {
   switch (btn.getLastState())
   {
@@ -333,7 +333,7 @@ void stopSetting(shHandle task)
   tasks.stopTask(return_to_default_mode);
 }
 
-void getData(byte &h, byte &m)
+void getData(uint8_t &h, uint8_t &m)
 {
   switch (displayMode)
   {
@@ -348,7 +348,7 @@ void getData(byte &h, byte &m)
     m = alarm.getAlarmPoint2() % 60;
     break;
   case DISPLAY_MODE_ALARM_ON_OFF:
-    h = (byte)alarm.getOnOffAlarm();
+    h = (uint8_t)alarm.getOnOffAlarm();
     break;
   case DISPLAY_MODE_SET_ALARM_INTERVAL:
     h = alarm.getAlarmInterval();
@@ -358,7 +358,7 @@ void getData(byte &h, byte &m)
   }
 }
 
-void saveData(byte h, byte m)
+void saveData(uint8_t h, uint8_t m)
 {
   switch (displayMode)
   {
@@ -398,7 +398,7 @@ void saveData(byte h, byte m)
   }
 }
 
-void setDisplayMode(byte x)
+void setDisplayMode(uint8_t x)
 {
   if (btnSet.getButtonFlag() == BTN_FLAG_NEXT)
   {
@@ -408,7 +408,7 @@ void setDisplayMode(byte x)
     case DISPLAY_MODE_SET_ALARM_HOUR_1:
     case DISPLAY_MODE_SET_ALARM_MINUTE_1:
     case DISPLAY_MODE_SET_ALARM_HOUR_2:
-      displayMode = DisplayMode(byte(displayMode + 1));
+      displayMode = DisplayMode(uint8_t(displayMode + 1));
       stopSetting(set_time_mode);
       break;
     case DISPLAY_MODE_SET_ALARM_MINUTE_2:
@@ -434,7 +434,7 @@ void setDisplayMode(byte x)
   }
 }
 
-void checkSettingData(byte &h, byte &m, bool dir)
+void checkSettingData(uint8_t &h, uint8_t &m, bool dir)
 {
   switch (displayMode)
   {
@@ -462,9 +462,9 @@ void checkSettingData(byte &h, byte &m, bool dir)
 void showTimeSetting()
 {
   static bool time_checked = false;
-  static byte curHour = 0;
-  static byte curMinute = 0;
-  static byte n = 10;
+  static uint8_t curHour = 0;
+  static uint8_t curMinute = 0;
+  static uint8_t n = 10;
 
   if (!tasks.getTaskState(set_time_mode))
   {
@@ -565,8 +565,8 @@ void showTemp()
 
 void showAlarmSetting()
 {
-  static byte n = 0;
-  static byte k = 0;
+  static uint8_t n = 0;
+  static uint8_t k = 0;
 
   if (!tasks.getTaskState(show_alarm_setting_mode))
   {
@@ -622,8 +622,8 @@ void checkAlarm()
 
 void runAlarmBuzzer()
 {
-  static byte n = 0;
-  static byte k = 0;
+  static uint8_t n = 0;
+  static uint8_t k = 0;
   // "мелодия" пищалки: первая строка - частота, вторая строка - длительность
   static const PROGMEM uint32_t pick[2][8] = {
       {2000, 0, 2000, 0, 2000, 0, 2000, 0},
@@ -682,7 +682,7 @@ void setBrightness()
 #ifdef USE_SET_BRIGHTNESS_MODE
 void showBrightnessSetting()
 {
-  static byte x = 0;
+  static uint8_t x = 0;
 
   if (!tasks.getTaskState(set_brightness_mode))
   {
@@ -745,7 +745,7 @@ void showBrightnessSetting()
 #endif
 
 // ===================================================
-void showTimeData(byte hour, byte minute)
+void showTimeData(uint8_t hour, uint8_t minute)
 {
   // если наступило время блинка и кнопки Up/Down не нажаты, то стереть соответствующие разряды; при нажатых кнопках Up/Down во время изменения данных ничего не мигает
   if (!blink_flag && !btnUp.isButtonClosed() && !btnDown.isButtonClosed())
@@ -775,7 +775,7 @@ void showTimeData(byte hour, byte minute)
                  displayMode == DISPLAY_MODE_SHOW_ALARM_SETTING));
 }
 
-void showAlarmState(byte _state)
+void showAlarmState(uint8_t _state)
 {
   disp.setDispData(0, 0b01110111); // "A"
   disp.setDispData(1, 0b10111000); // "L:"
@@ -817,13 +817,13 @@ void showSettingType(DisplayMode mode)
 }
 
 // ===================================================
-void saveTime(byte hour, byte minute)
+void saveTime(uint8_t hour, uint8_t minute)
 {
   saClock.setCurTime(hour, minute, 0);
 }
 
 // ===================================================
-void checkData(byte &dt, byte max, bool toUp)
+void checkData(uint8_t &dt, uint8_t max, bool toUp)
 {
   (toUp) ? dt++ : dt--;
   if (dt > max)
@@ -832,7 +832,7 @@ void checkData(byte &dt, byte max, bool toUp)
   }
 }
 
-void checkData(byte &dt, byte min, byte max, byte x, bool toUp)
+void checkData(uint8_t &dt, uint8_t min, uint8_t max, uint8_t x, bool toUp)
 {
   (toUp) ? dt += x : dt -= x;
   if (dt < min)
@@ -910,7 +910,7 @@ void setup()
 #endif
 
   // проверить корректность заданных уровней яркости
-  byte x = EEPROM.read(MAX_BRIGHTNESS_VALUE);
+  uint8_t x = EEPROM.read(MAX_BRIGHTNESS_VALUE);
   x = ((x > 7) || (x == 0)) ? 7 : x;
   EEPROM.update(MAX_BRIGHTNESS_VALUE, x);
 #ifdef USE_LIGHT_SENSOR
@@ -920,7 +920,7 @@ void setup()
 #endif
 
   // ==== задачи =======================================
-  byte task_count = 8;
+  uint8_t task_count = 8;
 #ifdef USE_LIGHT_SENSOR
   task_count++;
 #endif

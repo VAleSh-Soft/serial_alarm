@@ -110,14 +110,14 @@ void setDisplay();
  * @param hour часы
  * @param minute минуты
  */
-void showTimeData(byte hour, byte minute);
+void showTimeData(uint8_t hour, uint8_t minute);
 
 /**
  * @brief вывод на экран данных по состоянию будильника
  *
  * @param _state состояние будильника - включен/выключен
  */
-void showAlarmState(byte _state);
+void showAlarmState(uint8_t _state);
 
 /**
  * @brief вывод на экран текстовой метки настраиваемого типа данных будильника
@@ -133,7 +133,7 @@ void showSettingType(DisplayMode mode);
  * @param hour часы
  * @param minute минуты
  */
-void saveTime(byte hour, byte minute);
+void saveTime(uint8_t hour, uint8_t minute);
 
 // ==== разное =======================================
 /**
@@ -143,7 +143,7 @@ void saveTime(byte hour, byte minute);
  * @param max максимальное значение
  * @param toUp направление изменения данных
  */
-void checkData(byte &dt, byte max, bool toUp);
+void checkData(uint8_t &dt, uint8_t max, bool toUp);
 
 /**
  * @brief изменение данных на заданное значение с контролем выхода за предельные значение
@@ -154,4 +154,4 @@ void checkData(byte &dt, byte max, bool toUp);
  * @param x величина изменения значения
  * @param toUp направление изменения данных
  */
-void checkData(byte &dt, byte min, byte max, byte x, bool toUp);
+void checkData(uint8_t &dt, uint8_t min, uint8_t max, uint8_t x, bool toUp);

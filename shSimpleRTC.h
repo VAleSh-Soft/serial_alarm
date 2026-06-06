@@ -8,21 +8,21 @@
 
 static const uint8_t daysInMonth[] PROGMEM = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
-// ==== DateTime =====================================
+// ==== shDateTime =====================================
 
-// DateTime (все вместе) от JeeLabs/Adafruit
+// shDateTime (все вместе) от JeeLabs/Adafruit
 // Простой класс даты/времени общего назначения (без обработки TZ/DST/дополнительных секунд!)
-class DateTime
+class shDateTime
 {
 public:
-  DateTime(uint32_t t = 0);
+  shDateTime(uint32_t t = 0);
 
-  DateTime(uint16_t year, uint8_t month, uint8_t day,
+  shDateTime(uint16_t year, uint8_t month, uint8_t day,
            uint8_t hour = 0, uint8_t min = 0, uint8_t sec = 0);
 
-  DateTime(const DateTime &copy);
+  shDateTime(const shDateTime &copy);
 
-  DateTime(const char *date, const char *time);
+  shDateTime(const char *date, const char *time);
   uint16_t year() const;
   uint8_t month() const;
   uint8_t day() const;
@@ -52,9 +52,9 @@ private:
   static long time2long(uint16_t days, uint8_t h, uint8_t m, uint8_t s);
 };
 
-// ---- DateTime private ------------------------
+// ---- shDateTime private ------------------------
 
-uint16_t DateTime::date2days(uint16_t y, uint8_t m, uint8_t d)
+uint16_t shDateTime::date2days(uint16_t y, uint8_t m, uint8_t d)
 {
   if (y >= 2000)
     y -= 2000;
@@ -66,14 +66,14 @@ uint16_t DateTime::date2days(uint16_t y, uint8_t m, uint8_t d)
   return days + 365 * y + (y + 3) / 4 - 1;
 }
 
-long DateTime::time2long(uint16_t days, uint8_t h, uint8_t m, uint8_t s)
+long shDateTime::time2long(uint16_t days, uint8_t h, uint8_t m, uint8_t s)
 {
   return ((days * 24L + h) * 60 + m) * 60 + s;
 }
 
-// ---- DateTime public -------------------------
+// ---- shDateTime public -------------------------
 
-DateTime::DateTime(uint32_t t)
+shDateTime::shDateTime(uint32_t t)
 {
   t -= SECONDS_FROM_1970_TO_2000; // переместить точку времени с 1970 года на 2000
 
@@ -103,7 +103,7 @@ DateTime::DateTime(uint32_t t)
   d = days + 1;
 }
 
-DateTime::DateTime(uint16_t year, uint8_t month, uint8_t day,
+shDateTime::shDateTime(uint16_t year, uint8_t month, uint8_t day,
                    uint8_t hour, uint8_t min, uint8_t sec)
 {
   yOff = year % 100;
@@ -114,15 +114,15 @@ DateTime::DateTime(uint16_t year, uint8_t month, uint8_t day,
   ss = (sec <= 59) ? sec : 0;
 }
 
-DateTime::DateTime(const DateTime &copy) : yOff(copy.yOff), m(copy.m), d(copy.d),
+shDateTime::shDateTime(const shDateTime &copy) : yOff(copy.yOff), m(copy.m), d(copy.d),
                                            hh(copy.hh), mm(copy.mm), ss(copy.ss) {}
 
-uint16_t DateTime::year() const { return yOff; }
-uint8_t DateTime::month() const { return m; }
-uint8_t DateTime::day() const { return d; }
-uint8_t DateTime::hour() const { return hh; }
-uint8_t DateTime::minute() const { return mm; }
-uint8_t DateTime::second() const { return ss; }
+uint16_t shDateTime::year() const { return yOff; }
+uint8_t shDateTime::month() const { return m; }
+uint8_t shDateTime::day() const { return d; }
+uint8_t shDateTime::hour() const { return hh; }
+uint8_t shDateTime::minute() const { return mm; }
+uint8_t shDateTime::second() const { return ss; }
 
 /*
  * 32-битное время в секундах с 01.01.1970
@@ -131,7 +131,7 @@ uint8_t DateTime::second() const { return ss; }
  * ЭТОТ МЕТОД ДЛЯ ПОЛУЧЕНИЯ ПРАВИЛЬНОГО ВРЕМЕНИ UNIX, ВЫ ДОЛЖНЫ
  * ВЫЗВАТЬ ЭТОТ МЕТОД ПОСЛЕ УСТАНОВКИ ЧАСОВ В UTC.
  */
-uint32_t DateTime::unixtime(void) const
+uint32_t shDateTime::unixtime(void) const
 {
   uint32_t t;
   uint16_t days = date2days(yOff, m, d);
@@ -141,14 +141,14 @@ uint32_t DateTime::unixtime(void) const
   return t;
 }
 
-// ==== end DateTime =================================
+// ==== end shDateTime =================================
 
 // ==== shSimpleRTC ==================================
 
 class shSimpleRTC
 {
 private:
-  DateTime cur_time;
+  shDateTime cur_time;
 
   uint8_t decToBcd(uint8_t val);
   uint8_t bcdToDec(uint8_t val);
@@ -175,9 +175,9 @@ public:
   /**
    * @brief получение текущего времени и даты из внутреннего буфера
    *
-   * @return DateTime
+   * @return shDateTime
    */
-  DateTime getCurTime();
+  shDateTime getCurTime();
 
   /**
    * @brief установка текущего времени
@@ -280,16 +280,16 @@ void shSimpleRTC::now()
     uint8_t b5 = read_register(0x05);
     uint16_t b6 = read_register(0x06);
 
-    cur_time = DateTime(bcdToDec(b6), bcdToDec(b5 & 0x7F), bcdToDec(b4),
+    cur_time = shDateTime(bcdToDec(b6), bcdToDec(b5 & 0x7F), bcdToDec(b4),
                         bcdToDec(b2), bcdToDec(b1), bcdToDec(b0 & 0x7F));
   }
   else
   {
-    cur_time = DateTime(0, 1, 1, 0, 0, 0);
+    cur_time = shDateTime(0, 1, 1, 0, 0, 0);
   }
 }
 
-DateTime shSimpleRTC::getCurTime() { return (cur_time); }
+shDateTime shSimpleRTC::getCurTime() { return (cur_time); }
 
 void shSimpleRTC::setCurTime(uint8_t _hour, uint8_t _minute, uint8_t _second)
 {

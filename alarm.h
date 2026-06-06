@@ -26,8 +26,8 @@ enum AlarmState : uint8_t // состояние будильника
 class SerialAlarm
 {
 private:
-  byte red_pin;
-  byte green_pin;
+  uint8_t red_pin;
+  uint8_t green_pin;
   uint16_t eeprom_index;
   AlarmState state;
   uint16_t next_point;
@@ -47,14 +47,14 @@ private:
   void setLed(uint16_t _time);
 
 public:
-  SerialAlarm(byte _red_pin, byte _green_pin, uint16_t _eeprom_index);
+  SerialAlarm(uint8_t _red_pin, uint8_t _green_pin, uint16_t _eeprom_index);
 
   /**
    * @brief первоначальное определение точки следующего срабатывания будильника при включении или при изменении настроек будильника
    *
    * @param _time текущее время
    */
-  void init(DateTime _time);
+  void init(shDateTime _time);
 
   /**
    * @brief получение текущего состояния будильника
@@ -125,14 +125,14 @@ public:
    *
    * @param _time устанавливаемый интервал в минутах
    */
-  void setAlarmInterval(byte _time);
+  void setAlarmInterval(uint8_t _time);
 
   /**
    * @brief проверка текущего состояния будильника
    *
    * @param _time текущее время
    */
-  void tick(DateTime _time);
+  void tick(shDateTime _time);
 };
 
 // ---- private ---------------------------------
@@ -166,26 +166,29 @@ void SerialAlarm::setNextPoint(uint16_t _time)
 
 bool SerialAlarm::checkForInterval(uint16_t _time)
 {
-  if (getAlarmPoint2() == getAlarmPoint1())
+  uint16_t p1 = getAlarmPoint1();
+  uint16_t p2 = getAlarmPoint2();
+
+  if (p1 == p2)
   {
     return (false);
   }
 
-  if (getAlarmPoint2() > getAlarmPoint1())
+  if (p2 > p1)
   {
-    return ((_time >= getAlarmPoint1()) && (_time < getAlarmPoint2()));
+    return ((_time >= p1) && (_time < p2));
   }
   else
   {
-    return ((_time >= getAlarmPoint1()) || (_time < getAlarmPoint2()));
+    return ((_time >= p1) || (_time < p2));
   }
 }
 
 void SerialAlarm::setLed(uint16_t _time)
 {
-  static byte n = 0;
-  byte red_state = LOW;
-  byte green_state = LOW;
+  static uint8_t n = 0;
+  uint8_t red_state = LOW;
+  uint8_t green_state = LOW;
   if (state == ALARM_YES)
   { // при сработавшем будильнике светодиод мигает зеленым с периодом 0.2 секунды
     green_state = n;
@@ -204,7 +207,7 @@ void SerialAlarm::setLed(uint16_t _time)
 
 // ---- public ----------------------------------
 
-  SerialAlarm::SerialAlarm(byte _red_pin, byte _green_pin, uint16_t _eeprom_index)
+  SerialAlarm::SerialAlarm(uint8_t _red_pin, uint8_t _green_pin, uint16_t _eeprom_index)
   {
     red_pin = _red_pin;
     pinMode(red_pin, OUTPUT);
@@ -231,7 +234,7 @@ void SerialAlarm::setLed(uint16_t _time)
     state = (AlarmState)read_eeprom_8(ALARM_STATE);
   }
 
-  void SerialAlarm::init(DateTime _time)
+  void SerialAlarm::init(shDateTime _time)
   {
     uint16_t p1 = getAlarmPoint1();
     uint16_t p2 = getAlarmPoint2();
@@ -259,14 +262,9 @@ void SerialAlarm::setLed(uint16_t _time)
 
   bool SerialAlarm::getOnOffAlarm() { return (bool)read_eeprom_8(ALARM_STATE); }
 
-  /**
-   * @brief включение/выключение будильника
-   *
-   * @param _state флаг для установки состояния будильника
-   */
   void SerialAlarm::setOnOffAlarm(bool _state)
   {
-    write_eeprom_8(ALARM_STATE, (byte)_state);
+    write_eeprom_8(ALARM_STATE, (uint8_t)_state);
     state = (AlarmState)_state;
   }
 
@@ -280,7 +278,7 @@ void SerialAlarm::setLed(uint16_t _time)
 
   uint16_t SerialAlarm::getAlarmInterval() { return (read_eeprom_16(ALARM_INTERVAL)); }
 
-  void SerialAlarm::setAlarmInterval(byte _time)
+  void SerialAlarm::setAlarmInterval(uint8_t _time)
   {
     if (_time > 180)
     {
@@ -289,7 +287,7 @@ void SerialAlarm::setLed(uint16_t _time)
     write_eeprom_16(ALARM_INTERVAL, _time);
   }
 
-  void SerialAlarm::tick(DateTime _time)
+  void SerialAlarm::tick(shDateTime _time)
   {
     uint16_t tm = _time.hour() * 60 + _time.minute();
     setLed(tm);

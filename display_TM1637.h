@@ -6,8 +6,8 @@
 class DisplayTM1637 : public TM1637Display
 {
 private:
-  byte data[4];
-  byte _brightness = 1;
+  uint8_t data[4];
+  uint8_t _brightness = 1;
 
 public:
   DisplayTM1637(uint8_t clk_pin, uint8_t dat_pin) : TM1637Display(clk_pin, dat_pin)
@@ -33,15 +33,15 @@ public:
    * @param _index разряд буфера
    * @param _data данные для установки
    */
-  void setDispData(byte _index, byte _data);
+  void setDispData(uint8_t _index, uint8_t _data);
 
   /**
    * @brief получение значения разряда _index буфера экрана
    *
    * @param _index разряд буфера
-   * @return byte
+   * @return uint8_t
    */
-  byte getDispData(byte _index);
+  uint8_t getDispData(uint8_t _index);
 
   /**
    * @brief отрисовка на экране содержимого его буфера
@@ -73,21 +73,21 @@ public:
    * @param toSensor используется или нет датчик освещенности
    * @param toMin если true, то настраивается минимальный уровень яркости, иначе - максимальный
    */
-  void showBrightnessData(byte br, bool blink, bool toSensor = false, bool toMin = false);
+  void showBrightnessData(uint8_t br, bool blink, bool toSensor = false, bool toMin = false);
 
   /**
    * @brief установка яркости экрана; реально яркость будет изменена только после вызова метода show()
    *
    * @param brightness значение яркости (1..7)
    */
-  void setBrightness(byte brightness);
+  void setBrightness(uint8_t brightness);
 };
 
 // ---- public ----------------------------------
 
 ;  void DisplayTM1637::clear()
   {
-    for (byte i = 0; i < 4; i++)
+    for (uint8_t i = 0; i < 4; i++)
     {
       data[i] = 0x00;
     }
@@ -99,7 +99,7 @@ public:
     TM1637Display::setSegments(data);
   }
 
-  void DisplayTM1637::setDispData(byte _index, byte _data)
+  void DisplayTM1637::setDispData(uint8_t _index, uint8_t _data)
   {
     if (_index < 4)
     {
@@ -107,7 +107,7 @@ public:
     }
   }
 
-  byte DisplayTM1637::getDispData(byte _index)
+  uint8_t DisplayTM1637::getDispData(uint8_t _index)
   {
     return ((_index < 4) ? data[_index] : 0);
   }
@@ -115,9 +115,9 @@ public:
   void DisplayTM1637::show()
   {
     bool flag = false;
-    static byte _data[4] = {0x00, 0x00, 0x00, 0x00};
-    static byte br = 0;
-    for (byte i = 0; i < 4; i++)
+    static uint8_t _data[4] = {0x00, 0x00, 0x00, 0x00};
+    static uint8_t br = 0;
+    for (uint8_t i = 0; i < 4; i++)
     {
       flag = _data[i] != data[i];
       if (flag)
@@ -132,7 +132,7 @@ public:
     // отрисовка экрана происходит только если изменился хотя бы один разряд или изменилась яркость
     if (flag)
     {
-      for (byte i = 0; i < 4; i++)
+      for (uint8_t i = 0; i < 4; i++)
       {
         _data[i] = data[i];
       }
@@ -173,7 +173,7 @@ public:
     // если температура выходит за диапазон, сформировать строку минусов
     if (temp > 99)
     {
-      for (byte i = 0; i < 4; i++)
+      for (uint8_t i = 0; i < 4; i++)
       {
         data[i] = 0x40;
       }
@@ -192,7 +192,7 @@ public:
     }
   }
 
-  void DisplayTM1637::showBrightnessData(byte br, bool blink, bool toSensor = false, bool toMin = false)
+  void DisplayTM1637::showBrightnessData(uint8_t br, bool blink, bool toSensor = false, bool toMin = false)
   {
     clear();
     data[0] = 0b01111100;
@@ -213,7 +213,7 @@ public:
     }
   }
 
-   void DisplayTM1637::setBrightness(byte brightness)
+   void DisplayTM1637::setBrightness(uint8_t brightness)
   {
     _brightness = (brightness <= 7) ? brightness : 7;
     TM1637Display::setBrightness(brightness, true);
