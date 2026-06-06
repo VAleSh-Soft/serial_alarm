@@ -485,7 +485,6 @@ void checkData(uint8_t &dt, uint8_t min, uint8_t max, uint8_t x, bool toUp)
 }
 
 // ===================================================
-// ===================================================
 void setup()
 {
   saClock.init();

@@ -3,59 +3,24 @@
 
 // ==== пины =========================================
 
-// ==== пищалка ======================================
-#define BUZZER_PIN 7 // пин для подключения пищалки
-// ==== светодиод ====================================
-#define ALARM_RED_PIN 8   // пин для подключения красного светодиода - индикатора будильника
-#define ALARM_GREEN_PIN 9 // пин для подключения зеленого светодиода - индикатора будильника
+constexpr uint8_t BUZZER_PIN = 10;      // пин для подключения пищалки
+constexpr uint8_t ALARM_RED_PIN = 8;   // пин для подключения красного светодиода - индикатора будильника
+constexpr uint8_t ALARM_GREEN_PIN = 9; // пин для подключения зеленого светодиода - индикатора будильника
 
 // ==== EEPROM =======================================
 #define ALARM_EEPROM_INDEX 50 // индекс в EEPROM для сохранения настроек будильника
 
-
-// ==== опрос кнопок =================================
-void checkButton();
+    // ==== опрос кнопок =================================
+    void checkButton();
 void checkSetButton();
 void checkUpDownButton();
 
-// ==== задачи =======================================
-void rtcNow();
-void blink();
-void restartBlink();
-void returnToDefMode();
 void showTimeSetting();
 void showAlarmSetting();
-void setDisp();
 void checkAlarm();
 void runAlarmBuzzer();
-#ifdef USE_TEMP_DATA
-void showTemp();
-#ifdef USE_DS18B20
-void checkDS18b20();
-#endif
-#endif
-#ifdef USE_LIGHT_SENSOR
-void setBrightness();
-#endif
-#ifdef USE_SET_BRIGHTNESS_MODE
-void showBrightnessSetting();
-#endif
 
 // ==== вывод данных =================================
-/**
- * @brief вывод данных на экран
- *
- */
-void setDisplay();
-
-/**
- * @brief вывод на экран данных в режиме настройки времени или будильника
- *
- * @param hour часы
- * @param minute минуты
- */
-void showTimeData(uint8_t hour, uint8_t minute);
-
 /**
  * @brief вывод на экран данных по состоянию будильника
  *
