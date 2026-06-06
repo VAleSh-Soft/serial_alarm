@@ -1,6 +1,5 @@
 #pragma once
 #include <Arduino.h>
-#include "shSimpleRTC.h"
 #include <EEPROM.h>
 
 #define MAX_DATA 1439    // максимальное количество минут для установки будильника (23 ч, 59 мин)
@@ -54,7 +53,7 @@ public:
    *
    * @param _time текущее время
    */
-  void init(shDateTime _time);
+  // void init(shDateTime _time);
 
   /**
    * @brief получение текущего состояния будильника
@@ -132,7 +131,7 @@ public:
    *
    * @param _time текущее время
    */
-  void tick(shDateTime _time);
+  // void tick(shDateTime _time);
 };
 
 // ---- private ---------------------------------
@@ -234,27 +233,27 @@ void SerialAlarm::setLed(uint16_t _time)
     state = (AlarmState)read_eeprom_8(ALARM_STATE);
   }
 
-  void SerialAlarm::init(shDateTime _time)
-  {
-    uint16_t p1 = getAlarmPoint1();
-    uint16_t p2 = getAlarmPoint2();
-    uint32_t tm = _time.hour() * 3600ul + _time.minute() * 60ul + _time.second();
-    if (p2 < p1)
-    {
-      p2 += MAX_DATA + 1;
-    }
-    uint16_t x = p1;
-    while (x * 60ul < tm)
-    {
-      x += getAlarmInterval();
-    }
-    if (!checkForInterval(x))
-    {
-      x = p1;
-    }
+  // void SerialAlarm::init(shDateTime _time)
+  // {
+  //   uint16_t p1 = getAlarmPoint1();
+  //   uint16_t p2 = getAlarmPoint2();
+  //   uint32_t tm = _time.hour() * 3600ul + _time.minute() * 60ul + _time.second();
+  //   if (p2 < p1)
+  //   {
+  //     p2 += MAX_DATA + 1;
+  //   }
+  //   uint16_t x = p1;
+  //   while (x * 60ul < tm)
+  //   {
+  //     x += getAlarmInterval();
+  //   }
+  //   if (!checkForInterval(x))
+  //   {
+  //     x = p1;
+  //   }
 
-    setNextPoint(x);
-  }
+  //   setNextPoint(x);
+  // }
 
   AlarmState SerialAlarm::getAlarmState() { return (state); }
 
@@ -287,20 +286,20 @@ void SerialAlarm::setLed(uint16_t _time)
     write_eeprom_16(ALARM_INTERVAL, _time);
   }
 
-  void SerialAlarm::tick(shDateTime _time)
-  {
-    uint16_t tm = _time.hour() * 60 + _time.minute();
-    setLed(tm);
-    if (state == ALARM_ON)
-    {
-      if (tm * 60ul + _time.second() == next_point * 60ul)
-      {
-        state = ALARM_YES;
-        setNextPoint(next_point + read_eeprom_16(ALARM_INTERVAL));
-        if (!checkForInterval(next_point))
-        {
-          next_point = getAlarmPoint1();
-        }
-      }
-    }
-  }
+  // void SerialAlarm::tick(shDateTime _time)
+  // {
+  //   uint16_t tm = _time.hour() * 60 + _time.minute();
+  //   setLed(tm);
+  //   if (state == ALARM_ON)
+  //   {
+  //     if (tm * 60ul + _time.second() == next_point * 60ul)
+  //     {
+  //       state = ALARM_YES;
+  //       setNextPoint(next_point + read_eeprom_16(ALARM_INTERVAL));
+  //       if (!checkForInterval(next_point))
+  //       {
+  //         next_point = getAlarmPoint1();
+  //       }
+  //     }
+  //   }
+  // }

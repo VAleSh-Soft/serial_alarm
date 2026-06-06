@@ -77,12 +77,11 @@
 
 Часы построены с использованием модуля **DS3231**, семисегментного экрана  с драйвером **TM1637** и **Arduino Pro Mini** на базе **ATmega168p**. В качестве источника звука использован пассивный пьезоэлектрический излучатель. Индикаторный светодиод двухцветный, с общим катодом.
 
-Пины для подключения экрана, модуля DS3231, кнопок, пищалки, светодиода и датчиков температуры и света определены в файле **header_file.h**
+Пины для подключения экрана, модуля DS3231, кнопок, пищалки, светодиода и датчиков температуры и света определены в файле **clockSetting.h** (см. описание библиотеки [shSimpleClock](https://github.com/VAleSh-Soft/shSimpleClock/blob/main/docs/clock_setting.md))
 
 ### Использованные сторонние библиотеки
 
-**shButton.h** - https://github.com/VAleSh-Soft/shButton<br>
-**shTaskManager.h** - https://github.com/VAleSh-Soft/shTaskManager<br>
+**shSimpleClock.h** - https://github.com/VAleSh-Soft/shSimpleClock<br>
 
 Для работы с экраном используется библиотека<br>
 **TM1637Display.h** - https://github.com/avishorp/TM1637<br>
