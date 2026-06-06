@@ -5,10 +5,6 @@
 #include "header_file.h"
 #include "alarm.h"
 
-// ==== настройки ====================================
-#define ALARM_DURATION 60   // продолжительность сигнала будильника, секунд
-#define LIGHT_THRESHOLD 300 // порог переключения для датчика света
-#define AUTO_EXIT_TIMEOUT 6 // время автоматического возврата в режим показа текущего времени из любых других режимов при отсутствии активности пользователя, секунд
 // ===================================================
 
 SerialAlarm alarm(ALARM_RED_PIN, ALARM_GREEN_PIN, ALARM_EEPROM_INDEX);
@@ -488,11 +484,12 @@ void checkData(uint8_t &dt, uint8_t min, uint8_t max, uint8_t x, bool toUp)
 void setup()
 {
   saClock.init();
-  // alarm.init(saClock.getCurTime());
+  alarm.init(saClock.getCurrentDateTime());
 }
 
 void loop()
 {
   checkButton();
   saClock.tick();
+  alarm.tick(saClock.getCurrentDateTime());
 }

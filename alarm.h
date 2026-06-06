@@ -4,7 +4,7 @@
 
 #define MAX_DATA 1439    // максимальное количество минут для установки будильника (23 ч, 59 мин)
 #define MAX_INTERVAL 180 // максимальный интервал, минут
-#define MIN_INTERVAL 180 // минимальный интервал, минут
+#define MIN_INTERVAL 10  // минимальный интервал, минут
 
 enum IndexOffset : uint8_t // смещение от стартового индекса в EEPROM для хранения настроек
 /* общий размер настроек - 7 байт */
@@ -53,7 +53,7 @@ public:
    *
    * @param _time текущее время
    */
-  // void init(shDateTime _time);
+  void init(clkDateTime _time);
 
   /**
    * @brief получение текущего состояния будильника
@@ -67,7 +67,7 @@ public:
    *
    * @param _state новое значение состояния будильника
    */
-  void setAlarmState(AlarmState _state) ;
+  void setAlarmState(AlarmState _state);
 
   /**
    * @brief получение информации о состоянии будильника - включен/выключен
@@ -75,7 +75,7 @@ public:
    * @return true
    * @return false
    */
-  bool getOnOffAlarm() ;
+  bool getOnOffAlarm();
 
   /**
    * @brief включение/выключение будильника
@@ -89,35 +89,35 @@ public:
    *
    * @return uint16_t время в минутах от начала суток
    */
-  uint16_t getAlarmPoint1() ;
+  uint16_t getAlarmPoint1();
 
   /**
    * @brief установка времени перехода будильника в активный режим
    *
    * @param _time время в минутах от начала суток
    */
-  void setAlarmPoint1(uint16_t _time) ;
+  void setAlarmPoint1(uint16_t _time);
 
   /**
    * @brief получение времени перехода будильника в неактивный режим
    *
    * @return uint16_t время в минутах от начала суток
    */
-  uint16_t getAlarmPoint2() ;
+  uint16_t getAlarmPoint2();
 
   /**
    * @brief установка времени перехода будильника в неактивный режим
    *
    * @param _time время в минутах от начала суток
    */
-  void setAlarmPoint2(uint16_t _time) ;
+  void setAlarmPoint2(uint16_t _time);
 
   /**
    * @brief получение действующего интервала срабатывания будильника (минут)
    *
    * @return uint16_t
    */
-  uint16_t getAlarmInterval() ;
+  uint16_t getAlarmInterval();
 
   /**
    * @brief установка интервала срабатывания будильника
@@ -131,7 +131,7 @@ public:
    *
    * @param _time текущее время
    */
-  // void tick(shDateTime _time);
+  void tick(clkDateTime _time);
 };
 
 // ---- private ---------------------------------
@@ -206,100 +206,100 @@ void SerialAlarm::setLed(uint16_t _time)
 
 // ---- public ----------------------------------
 
-  SerialAlarm::SerialAlarm(uint8_t _red_pin, uint8_t _green_pin, uint16_t _eeprom_index)
+SerialAlarm::SerialAlarm(uint8_t _red_pin, uint8_t _green_pin, uint16_t _eeprom_index)
+{
+  red_pin = _red_pin;
+  pinMode(red_pin, OUTPUT);
+  green_pin = _green_pin;
+  pinMode(green_pin, OUTPUT);
+  eeprom_index = _eeprom_index;
+  if (read_eeprom_8(ALARM_STATE) > 1)
   {
-    red_pin = _red_pin;
-    pinMode(red_pin, OUTPUT);
-    green_pin = _green_pin;
-    pinMode(green_pin, OUTPUT);
-    eeprom_index = _eeprom_index;
-    if (read_eeprom_8(ALARM_STATE) > 1)
-    {
-      write_eeprom_8(ALARM_STATE, 0);
-    }
-    if (read_eeprom_16(ALARM_POINT_1) > MAX_DATA)
-    {
-      write_eeprom_16(ALARM_POINT_1, 0);
-    }
-    if (read_eeprom_16(ALARM_POINT_2) > MAX_DATA)
-    {
-      write_eeprom_16(ALARM_POINT_2, 0);
-    }
-    if ((read_eeprom_16(ALARM_INTERVAL) > MAX_INTERVAL) ||
-        (read_eeprom_16(ALARM_INTERVAL) < MIN_INTERVAL))
-    {
-      write_eeprom_16(ALARM_INTERVAL, 60);
-    }
-    state = (AlarmState)read_eeprom_8(ALARM_STATE);
+    write_eeprom_8(ALARM_STATE, 0);
+  }
+  if (read_eeprom_16(ALARM_POINT_1) > MAX_DATA)
+  {
+    write_eeprom_16(ALARM_POINT_1, 0);
+  }
+  if (read_eeprom_16(ALARM_POINT_2) > MAX_DATA)
+  {
+    write_eeprom_16(ALARM_POINT_2, 0);
+  }
+  if ((read_eeprom_16(ALARM_INTERVAL) > MAX_INTERVAL) ||
+      (read_eeprom_16(ALARM_INTERVAL) < MIN_INTERVAL))
+  {
+    write_eeprom_16(ALARM_INTERVAL, 60);
+  }
+  state = (AlarmState)read_eeprom_8(ALARM_STATE);
+}
+
+void SerialAlarm::init(clkDateTime _time)
+{
+  uint16_t p1 = getAlarmPoint1();
+  uint16_t p2 = getAlarmPoint2();
+  uint32_t tm = _time.hour() * 3600ul + _time.minute() * 60ul + _time.second();
+  if (p2 < p1)
+  {
+    p2 += MAX_DATA + 1;
+  }
+  uint16_t x = p1;
+  while (x * 60ul < tm)
+  {
+    x += getAlarmInterval();
+  }
+  if (!checkForInterval(x))
+  {
+    x = p1;
   }
 
-  // void SerialAlarm::init(shDateTime _time)
-  // {
-  //   uint16_t p1 = getAlarmPoint1();
-  //   uint16_t p2 = getAlarmPoint2();
-  //   uint32_t tm = _time.hour() * 3600ul + _time.minute() * 60ul + _time.second();
-  //   if (p2 < p1)
-  //   {
-  //     p2 += MAX_DATA + 1;
-  //   }
-  //   uint16_t x = p1;
-  //   while (x * 60ul < tm)
-  //   {
-  //     x += getAlarmInterval();
-  //   }
-  //   if (!checkForInterval(x))
-  //   {
-  //     x = p1;
-  //   }
+  setNextPoint(x);
+}
 
-  //   setNextPoint(x);
-  // }
+AlarmState SerialAlarm::getAlarmState() { return (state); }
 
-  AlarmState SerialAlarm::getAlarmState() { return (state); }
+void SerialAlarm::setAlarmState(AlarmState _state) { state = _state; }
 
-  void SerialAlarm::setAlarmState(AlarmState _state) { state = _state; }
+bool SerialAlarm::getOnOffAlarm() { return (bool)read_eeprom_8(ALARM_STATE); }
 
-  bool SerialAlarm::getOnOffAlarm() { return (bool)read_eeprom_8(ALARM_STATE); }
+void SerialAlarm::setOnOffAlarm(bool _state)
+{
+  write_eeprom_8(ALARM_STATE, (uint8_t)_state);
+  state = (AlarmState)_state;
+}
 
-  void SerialAlarm::setOnOffAlarm(bool _state)
+uint16_t SerialAlarm::getAlarmPoint1() { return (read_eeprom_16(ALARM_POINT_1)); }
+
+void SerialAlarm::setAlarmPoint1(uint16_t _time) { write_eeprom_16(ALARM_POINT_1, _time); }
+
+uint16_t SerialAlarm::getAlarmPoint2() { return (read_eeprom_16(ALARM_POINT_2)); }
+
+void SerialAlarm::setAlarmPoint2(uint16_t _time) { write_eeprom_16(ALARM_POINT_2, _time); }
+
+uint16_t SerialAlarm::getAlarmInterval() { return (read_eeprom_16(ALARM_INTERVAL)); }
+
+void SerialAlarm::setAlarmInterval(uint8_t _time)
+{
+  if (_time > 180)
   {
-    write_eeprom_8(ALARM_STATE, (uint8_t)_state);
-    state = (AlarmState)_state;
+    _time = 180;
   }
+  write_eeprom_16(ALARM_INTERVAL, _time);
+}
 
-  uint16_t SerialAlarm::getAlarmPoint1() { return (read_eeprom_16(ALARM_POINT_1)); }
-
-  void SerialAlarm::setAlarmPoint1(uint16_t _time) { write_eeprom_16(ALARM_POINT_1, _time); }
-
-  uint16_t SerialAlarm::getAlarmPoint2() { return (read_eeprom_16(ALARM_POINT_2)); }
-
-   void SerialAlarm::setAlarmPoint2(uint16_t _time) { write_eeprom_16(ALARM_POINT_2, _time); }
-
-  uint16_t SerialAlarm::getAlarmInterval() { return (read_eeprom_16(ALARM_INTERVAL)); }
-
-  void SerialAlarm::setAlarmInterval(uint8_t _time)
+void SerialAlarm::tick(clkDateTime _time)
+{
+  uint16_t tm = _time.hour() * 60 + _time.minute();
+  setLed(tm);
+  if (state == ALARM_ON)
   {
-    if (_time > 180)
+    if (tm * 60ul + _time.second() == next_point * 60ul)
     {
-      _time = 180;
+      state = ALARM_YES;
+      setNextPoint(next_point + read_eeprom_16(ALARM_INTERVAL));
+      if (!checkForInterval(next_point))
+      {
+        next_point = getAlarmPoint1();
+      }
     }
-    write_eeprom_16(ALARM_INTERVAL, _time);
   }
-
-  // void SerialAlarm::tick(shDateTime _time)
-  // {
-  //   uint16_t tm = _time.hour() * 60 + _time.minute();
-  //   setLed(tm);
-  //   if (state == ALARM_ON)
-  //   {
-  //     if (tm * 60ul + _time.second() == next_point * 60ul)
-  //     {
-  //       state = ALARM_YES;
-  //       setNextPoint(next_point + read_eeprom_16(ALARM_INTERVAL));
-  //       if (!checkForInterval(next_point))
-  //       {
-  //         next_point = getAlarmPoint1();
-  //       }
-  //     }
-  //   }
-  // }
+}
