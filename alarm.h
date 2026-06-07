@@ -288,18 +288,29 @@ void SerialAlarm::setAlarmInterval(uint8_t _time)
 
 void SerialAlarm::tick(clkDateTime _time)
 {
-  uint16_t tm = _time.hour() * 60 + _time.minute();
-  setLed(tm);
-  if (state == ALARM_ON)
+  static unsigned long timer = 0;
+
+  if (millis() - timer >= 10)
   {
-    if (tm * 60ul + _time.second() == next_point * 60ul)
+    uint16_t tm = _time.hour() * 60 + _time.minute();
+    setLed(tm);
+
+    if (state == ALARM_ON)
     {
-      state = ALARM_YES;
-      setNextPoint(next_point + read_eeprom_16(ALARM_INTERVAL));
-      if (!checkForInterval(next_point))
+      if (tm * 60ul + _time.second() == next_point * 60ul)
       {
-        next_point = getAlarmPoint1();
+        state = ALARM_YES;
+        setNextPoint(next_point + read_eeprom_16(ALARM_INTERVAL));
+        if (!checkForInterval(next_point))
+        {
+          next_point = getAlarmPoint1();
+        }
       }
+    }
+
+    if (state == ALARM_YES)
+    {
+      /* code */
     }
   }
 }

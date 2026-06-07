@@ -14,8 +14,6 @@ constexpr uint8_t ALARM_GREEN_PIN = 9; // пин для подключения �
 
 // ==== опрос кнопок =================================
 void checkButton();
-void checkSetButton();
-void checkUpDownButton();
 
 void showTimeSetting();
 void showAlarmSetting();

@@ -7,162 +7,45 @@
 
 // ===================================================
 
-SerialAlarm alarm(ALARM_RED_PIN, ALARM_GREEN_PIN, ALARM_EEPROM_INDEX);
+SerialAlarm saAlarm(ALARM_RED_PIN, ALARM_GREEN_PIN, ALARM_EEPROM_INDEX);
 shSimpleClock saClock;
 
 // ===================================================
 void checkButton()
 {
-  checkSetButton();
-  checkUpDownButton();
-}
+  // если в данный момент сработал будильник, клик любой кнопкой отключает
+  // сигнализатор
+  if (saAlarm.getAlarmState() == ALARM_YES)
+  {
+    for (uint8_t i = 0; i < 3; i++)
+    {
+      clkButtonType btn = (clkButtonType)i;
+      if (saClock.getButtonState(btn) == BTN_DOWN ||
+          saClock.getButtonState(btn) == BTN_DBLCLICK)
+      {
+        saAlarm.setAlarmState(ALARM_ON);
+        // тут добавить сброс кнопки
+        saClock.setButtonFlag(btn, CLK_BTN_FLAG_NONE);
+        return;
+      }
+    }
+  }
 
-void checkSetButton()
-{
-//   switch (btnSet.getButtonState())
-//   {
-//   case BTN_ONECLICK:
-//     switch (displayMode)
-//     {
-//     case DISPLAY_MODE_SET_HOUR:
-//     case DISPLAY_MODE_SET_MINUTE:
-//     case DISPLAY_MODE_SET_ALARM_HOUR_1:
-//     case DISPLAY_MODE_SET_ALARM_MINUTE_1:
-//     case DISPLAY_MODE_SET_ALARM_HOUR_2:
-//     case DISPLAY_MODE_SET_ALARM_MINUTE_2:
-//     case DISPLAY_MODE_SET_ALARM_INTERVAL:
-//     case DISPLAY_MODE_ALARM_ON_OFF:
-// #ifdef USE_SET_BRIGHTNESS_MODE
-// #ifdef USE_LIGHT_SENSOR
-//     case DISPLAY_MODE_SET_BRIGHTNESS_MIN:
-// #endif
-//     case DISPLAY_MODE_SET_BRIGHTNESS_MAX:
-// #endif
-//       btnSet.setButtonFlag(BTN_FLAG_NEXT);
-//       break;
-//     default:
-//       break;
-//     }
-//     break;
-//   case BTN_DBLCLICK:
-//     switch (displayMode)
-//     {
-//     case DISPLAY_MODE_SHOW_TIME:
-//       displayMode = DISPLAY_MODE_ALARM_ON_OFF;
-//       break;
-//     default:
-//       break;
-//     }
-//     break;
-//   case BTN_LONGCLICK:
-//     switch (displayMode)
-//     {
-//     case DISPLAY_MODE_SHOW_TIME:
-//       displayMode = DISPLAY_MODE_SET_HOUR;
-//       break;
-//     case DISPLAY_MODE_SET_HOUR:
-//     case DISPLAY_MODE_SET_MINUTE:
-//     case DISPLAY_MODE_SET_ALARM_HOUR_1:
-//     case DISPLAY_MODE_SET_ALARM_MINUTE_1:
-//     case DISPLAY_MODE_SET_ALARM_HOUR_2:
-//     case DISPLAY_MODE_SET_ALARM_MINUTE_2:
-//     case DISPLAY_MODE_SET_ALARM_INTERVAL:
-//     case DISPLAY_MODE_ALARM_ON_OFF:
-//       btnSet.setButtonFlag(BTN_FLAG_EXIT);
-//       break;
-//     default:
-//       break;
-//     }
-//     break;
-//   }
-}
-
-// void checkUDbtn(saButton &btn)
-// {
-  // switch (btn.getLastState())
-  // {
-  // case BTN_DOWN:
-  // case BTN_DBLCLICK:
-  //   btn.setButtonFlag(BTN_FLAG_NEXT);
-  //   break;
-  // case BTN_LONGCLICK:
-  //   if (displayMode != DISPLAY_MODE_ALARM_ON_OFF)
-  //   {
-  //     btn.setButtonFlag(BTN_FLAG_NEXT);
-  //   }
-  //   break;
-  // }
-// }
-
-void checkUpDownButton()
-{
-//   btnUp.getButtonState();
-//   btnDown.getButtonState();
-//   switch (displayMode)
-//   {
-//   case DISPLAY_MODE_SHOW_TIME:
-//     if (btnDown.getLastState() == BTN_ONECLICK && alarm.getOnOffAlarm())
-//     {
-//       displayMode = DISPLAY_MODE_SHOW_ALARM_SETTING;
-//     }
-// #ifdef USE_TEMP_DATA
-//     if (btnUp.getLastState() == BTN_ONECLICK)
-//     {
-//       displayMode = DISPLAY_MODE_SHOW_TEMP;
-//     }
-// #endif
-// #ifdef USE_SET_BRIGHTNESS_MODE
-//     if (btnUp.isSecondButtonPressed(btnDown, BTN_LONGCLICK) ||
-//         btnDown.isSecondButtonPressed(btnUp, BTN_LONGCLICK))
-//     {
-// #ifdef USE_LIGHT_SENSOR
-//       displayMode = DISPLAY_MODE_SET_BRIGHTNESS_MIN;
-// #else
-//       displayMode = DISPLAY_MODE_SET_BRIGHTNESS_MAX;
-// #endif
-//     }
-// #endif
-//     break;
-//   case DISPLAY_MODE_SET_HOUR:
-//   case DISPLAY_MODE_SET_MINUTE:
-//   case DISPLAY_MODE_SET_ALARM_HOUR_1:
-//   case DISPLAY_MODE_SET_ALARM_MINUTE_1:
-//   case DISPLAY_MODE_SET_ALARM_HOUR_2:
-//   case DISPLAY_MODE_SET_ALARM_MINUTE_2:
-//   case DISPLAY_MODE_SET_ALARM_INTERVAL:
-//   case DISPLAY_MODE_ALARM_ON_OFF:
-// #ifdef USE_SET_BRIGHTNESS_MODE
-// #ifdef USE_LIGHT_SENSOR
-//   case DISPLAY_MODE_SET_BRIGHTNESS_MIN:
-// #endif
-//   case DISPLAY_MODE_SET_BRIGHTNESS_MAX:
-// #endif
-//     if (!btnDown.isButtonClosed())
-//     {
-//       checkUDbtn(btnUp);
-//     }
-//     if (!btnUp.isButtonClosed())
-//     {
-//       checkUDbtn(btnDown);
-//     }
-//     break;
-//   case DISPLAY_MODE_SHOW_ALARM_SETTING:
-//     if (btnDown.getLastState() == BTN_ONECLICK)
-//     {
-//       returnToDefMode();
-//     }
-//     break;
-// #ifdef USE_TEMP_DATA
-//   case DISPLAY_MODE_SHOW_TEMP:
-//     if (btnUp.getLastState() == BTN_ONECLICK)
-//     {
-//       returnToDefMode();
-//     }
-//     break;
-// #endif
-//   default:
-//     break;
-//   }
+  if (saClock.getDisplayMode() == DISPLAY_MODE_SHOW_TIME)
+  {
+    // иначе ловим двойной клик кнопки Set для включения режима настройки будильника
+    if (saClock.getButtonState(CLK_BTN_SET) == BTN_DBLCLICK)
+    {
+      saClock.setDisplayMode(DISPLAY_MODE_CUSTOM_1);
+      saClock.setButtonFlag(CLK_BTN_SET, CLK_BTN_FLAG_NONE);
+    }
+    // или клик кнопкой Down для вывода на экран настроек будильника
+    if (saClock.getButtonState(CLK_BTN_DOWN) == BTN_DBLCLICK)
+    {
+      saClock.setDisplayMode(DISPLAY_MODE_CUSTOM_2);
+      saClock.setButtonFlag(CLK_BTN_DOWN, CLK_BTN_FLAG_NONE);
+    }    
+  }
 }
 
 void getData(uint8_t &h, uint8_t &m)
@@ -171,19 +54,19 @@ void getData(uint8_t &h, uint8_t &m)
   // {
   // case DISPLAY_MODE_SET_ALARM_HOUR_1:
   // case DISPLAY_MODE_SET_ALARM_MINUTE_1:
-  //   h = alarm.getAlarmPoint1() / 60;
-  //   m = alarm.getAlarmPoint1() % 60;
+  //   h = saAlarm.getAlarmPoint1() / 60;
+  //   m = saAlarm.getAlarmPoint1() % 60;
   //   break;
   // case DISPLAY_MODE_SET_ALARM_HOUR_2:
   // case DISPLAY_MODE_SET_ALARM_MINUTE_2:
-  //   h = alarm.getAlarmPoint2() / 60;
-  //   m = alarm.getAlarmPoint2() % 60;
+  //   h = saAlarm.getAlarmPoint2() / 60;
+  //   m = saAlarm.getAlarmPoint2() % 60;
   //   break;
   // case DISPLAY_MODE_ALARM_ON_OFF:
-  //   h = (uint8_t)alarm.getOnOffAlarm();
+  //   h = (uint8_t)saAlarm.getOnOffAlarm();
   //   break;
   // case DISPLAY_MODE_SET_ALARM_INTERVAL:
-  //   h = alarm.getAlarmInterval();
+  //   h = saAlarm.getAlarmInterval();
   //   break;
   // default:
   //   break;
@@ -200,17 +83,17 @@ void saveData(uint8_t h, uint8_t m)
   //   break;
   // case DISPLAY_MODE_SET_ALARM_HOUR_1:
   // case DISPLAY_MODE_SET_ALARM_MINUTE_1:
-  //   alarm.setAlarmPoint1(h * 60 + m);
+  //   saAlarm.setAlarmPoint1(h * 60 + m);
   //   break;
   // case DISPLAY_MODE_SET_ALARM_HOUR_2:
   // case DISPLAY_MODE_SET_ALARM_MINUTE_2:
-  //   alarm.setAlarmPoint2(h * 60 + m);
+  //   saAlarm.setAlarmPoint2(h * 60 + m);
   //   break;
   // case DISPLAY_MODE_ALARM_ON_OFF:
-  //   alarm.setOnOffAlarm((bool)h);
+  //   saAlarm.setOnOffAlarm((bool)h);
   //   break;
   // case DISPLAY_MODE_SET_ALARM_INTERVAL:
-  //   alarm.setAlarmInterval(h);
+  //   saAlarm.setAlarmInterval(h);
   //   break;
   // default:
   //   break;
@@ -223,13 +106,12 @@ void saveData(uint8_t h, uint8_t m)
   // case DISPLAY_MODE_SET_ALARM_HOUR_2:
   // case DISPLAY_MODE_SET_ALARM_MINUTE_2:
   // case DISPLAY_MODE_SET_ALARM_INTERVAL:
-  //   alarm.init(saClock.getCurTime());
+  //   saAlarm.init(saClock.getCurTime());
   //   break;
   // default:
   //   break;
   // }
 }
-
 
 void checkSettingData(uint8_t &h, uint8_t &m, bool dir)
 {
@@ -326,7 +208,6 @@ void showTimeSetting()
   // }
 }
 
-
 void showAlarmSetting()
 {
   // static uint8_t n = 0;
@@ -346,15 +227,15 @@ void showAlarmSetting()
   // {
   // case 0:
   //   m = DISPLAY_MODE_SET_ALARM_HOUR_1;
-  //   x = alarm.getAlarmPoint1();
+  //   x = saAlarm.getAlarmPoint1();
   //   break;
   // case 1:
   //   m = DISPLAY_MODE_SET_ALARM_HOUR_2;
-  //   x = alarm.getAlarmPoint2();
+  //   x = saAlarm.getAlarmPoint2();
   //   break;
   // case 2:
   //   m = DISPLAY_MODE_SET_ALARM_INTERVAL;
-  //   x = alarm.getAlarmInterval();
+  //   x = saAlarm.getAlarmInterval();
   //   break;
   // }
 
@@ -372,8 +253,8 @@ void showAlarmSetting()
 
 void checkAlarm()
 {
-  // alarm.tick(saClock.getCurTime());
-  // if (alarm.getAlarmState() == ALARM_YES && !tasks.getTaskState(alarm_buzzer))
+  // saAlarm.tick(saClock.getCurTime());
+  // if (saAlarm.getAlarmState() == ALARM_YES && !tasks.getTaskState(alarm_buzzer))
   // {
   //   runAlarmBuzzer();
   // }
@@ -394,7 +275,7 @@ void runAlarmBuzzer()
   //   n = 0;
   //   k = 0;
   // }
-  // else if (alarm.getAlarmState() != ALARM_YES)
+  // else if (saAlarm.getAlarmState() != ALARM_YES)
   // { // остановка пищалки, если будильник отключен
   //   tasks.stopTask(alarm_buzzer);
   //   return;
@@ -410,11 +291,10 @@ void runAlarmBuzzer()
   //     k = 0;
   //     tasks.stopTask(alarm_buzzer);
   //     tasks.setTaskInterval(alarm_buzzer, 50, false);
-  //     alarm.setAlarmState(ALARM_ON);
+  //     saAlarm.setAlarmState(ALARM_ON);
   //   }
   // }
 }
-
 
 void showAlarmState(uint8_t _state)
 {
@@ -433,28 +313,28 @@ void showAlarmState(uint8_t _state)
 
 // void showSettingType(DisplayMode mode)
 // {
-  // // DISPLAY_MODE_SET_ALARM_HOUR_1   - P1:
-  // // DISPLAY_MODE_SET_ALARM_HOUR_2   - P2:
-  // // DISPLAY_MODE_SET_ALARM_INTERVAL - It:
-  // switch (mode)
-  // {
-  // case DISPLAY_MODE_SET_ALARM_HOUR_1:
-  //   disp.setDispData(0, 0b01110011);
-  //   disp.setDispData(1, 0b10000110);
-  //   break;
-  // case DISPLAY_MODE_SET_ALARM_HOUR_2:
-  //   disp.setDispData(0, 0b01110011);
-  //   disp.setDispData(1, 0b11011011);
-  //   break;
-  // case DISPLAY_MODE_SET_ALARM_INTERVAL:
-  //   disp.setDispData(0, 0b00000110);
-  //   disp.setDispData(1, 0b11111000);
-  //   break;
-  // default:
-  //   break;
-  // }
-  // disp.setDispData(2, 0x00);
-  // disp.setDispData(3, 0x00);
+// // DISPLAY_MODE_SET_ALARM_HOUR_1   - P1:
+// // DISPLAY_MODE_SET_ALARM_HOUR_2   - P2:
+// // DISPLAY_MODE_SET_ALARM_INTERVAL - It:
+// switch (mode)
+// {
+// case DISPLAY_MODE_SET_ALARM_HOUR_1:
+//   disp.setDispData(0, 0b01110011);
+//   disp.setDispData(1, 0b10000110);
+//   break;
+// case DISPLAY_MODE_SET_ALARM_HOUR_2:
+//   disp.setDispData(0, 0b01110011);
+//   disp.setDispData(1, 0b11011011);
+//   break;
+// case DISPLAY_MODE_SET_ALARM_INTERVAL:
+//   disp.setDispData(0, 0b00000110);
+//   disp.setDispData(1, 0b11111000);
+//   break;
+// default:
+//   break;
+// }
+// disp.setDispData(2, 0x00);
+// disp.setDispData(3, 0x00);
 // }
 
 // ===================================================
@@ -484,12 +364,12 @@ void checkData(uint8_t &dt, uint8_t min, uint8_t max, uint8_t x, bool toUp)
 void setup()
 {
   saClock.init();
-  alarm.init(saClock.getCurrentDateTime());
+  saAlarm.init(saClock.getCurrentDateTime());
 }
 
 void loop()
 {
   checkButton();
   saClock.tick();
-  alarm.tick(saClock.getCurrentDateTime());
+  saAlarm.tick(saClock.getCurrentDateTime());
 }
