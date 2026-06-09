@@ -255,16 +255,35 @@ SerialAlarm::SerialAlarm(uint8_t _red_pin, uint8_t _green_pin, uint16_t _eeprom_
 void SerialAlarm::init(clkDateTime _time)
 {
   uint16_t p1 = getAlarmPoint1();
+  if (p1 > MAX_DATA)
+  {
+    p1 = (uint16_t)8 * 60;
+    setAlarmPoint1(p1);
+  }
   uint16_t p2 = getAlarmPoint2();
+  if (p2 > MAX_DATA)
+  {
+    p2 = (uint16_t)17 * 60 + 1;
+    setAlarmPoint2(p2);
+  }
+
   uint32_t tm = _time.hour() * 3600ul + _time.minute() * 60ul + _time.second();
   if (p2 < p1)
   {
     p2 += MAX_DATA + 1;
   }
+
   uint16_t x = p1;
+  uint16_t it = getAlarmInterval();
+  if (it > MAX_INTERVAL || it < MIN_INTERVAL)
+  {
+    it = MIN_INTERVAL;
+    setAlarmInterval(it);
+  }
+
   while (x * 60ul < tm)
   {
-    x += getAlarmInterval();
+    x += it;
   }
   if (!checkForInterval(x))
   {
@@ -328,3 +347,7 @@ void SerialAlarm::tick(clkDateTime _time)
     /* code */
   }
 }
+
+// ===================================================
+
+SerialAlarm saAlarm(ALARM_RED_PIN, ALARM_GREEN_PIN, ALARM_EEPROM_INDEX);

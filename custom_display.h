@@ -1,14 +1,14 @@
 /**
  * @file custom_display.h
  * @author Vladimir Shatalov (valesh-soft@yandex.ru)
- * 
+ *
  * @brief Экраны для вывода данных и настройки будильника
- * 
+ *
  * @version 1.0
  * @date 2026-06-09
- * 
+ *
  * @copyright Copyright (c) 2026
- * 
+ *
  */
 #pragma once
 
@@ -178,47 +178,55 @@ void showTimeSetting()
   // }
 }
 
+void showTimeData(uint8_t h, uint8_t m)
+{
+  clkDisplay.setDispData(0, clkDisplay.encodeDigit(h / 10));
+  clkDisplay.setDispData(1, clkDisplay.encodeDigit(h % 10) + 0x80);
+  clkDisplay.setDispData(2, clkDisplay.encodeDigit(m / 10));
+  clkDisplay.setDispData(3, clkDisplay.encodeDigit(m % 10));
+}
+
 void showAlarmSetting()
 {
-  // static uint8_t n = 0;
-  // static uint8_t k = 0;
+  static uint8_t n = 0;
+  static uint8_t k = 0;
 
-  // if (!tasks.getTaskState(show_alarm_setting_mode))
-  // {
-  //   tasks.startTask(show_alarm_setting_mode);
-  //   tasks.startTask(return_to_default_mode);
-  //   n = 0;
-  //   k = 0;
-  // }
+  if (!tasks.getTaskState(show_alarm_setting_mode))
+  {
+    tasks.startTask(show_alarm_setting_mode);
+    tasks.startTask(return_to_default_mode);
+    n = 0;
+    k = 0;
+  }
 
-  // uint16_t x = 0;
-  // DisplayMode m = DISPLAY_MODE_SET_ALARM_HOUR_1;
-  // switch (k)
-  // {
-  // case 0:
-  //   m = DISPLAY_MODE_SET_ALARM_HOUR_1;
-  //   x = saAlarm.getAlarmPoint1();
-  //   break;
-  // case 1:
-  //   m = DISPLAY_MODE_SET_ALARM_HOUR_2;
-  //   x = saAlarm.getAlarmPoint2();
-  //   break;
-  // case 2:
-  //   m = DISPLAY_MODE_SET_ALARM_INTERVAL;
-  //   x = saAlarm.getAlarmInterval();
-  //   break;
-  // }
+  uint16_t x = 0;
+  saAlarmSettingDataType m = ALARM_DATA_HOUR_1;
+  switch (k)
+  {
+  case 0:
+    m = ALARM_DATA_HOUR_1;
+    x = saAlarm.getAlarmPoint1();
+    break;
+  case 1:
+    m = ALARM_DATA_HOUR_2;
+    x = saAlarm.getAlarmPoint2();
+    break;
+  case 2:
+    m = ALARM_DATA_INTERVAL;
+    x = saAlarm.getAlarmInterval();
+    break;
+  }
 
-  // (n < 8) ? showSettingType(m) : showTimeData(x / 60, x % 60);
+  (n < 8) ? showSettingType(m) : showTimeData(x / 60, x % 60);
 
-  // if (++n > 19)
-  // {
-  //   n = 0;
-  //   if (++k > 2)
-  //   {
-  //     returnToDefMode();
-  //   }
-  // }
+  if (++n > 19)
+  {
+    n = 0;
+    if (++k > 2)
+    {
+      returnToDefMode();
+    }
+  }
 }
 
 void showAlarmState(uint8_t _state)
@@ -236,29 +244,33 @@ void showAlarmState(uint8_t _state)
   // }
 }
 
-// void showSettingType(DisplayMode mode)
-// {
-// // DISPLAY_MODE_SET_ALARM_HOUR_1   - P1:
-// // DISPLAY_MODE_SET_ALARM_HOUR_2   - P2:
-// // DISPLAY_MODE_SET_ALARM_INTERVAL - It:
-// switch (mode)
-// {
-// case DISPLAY_MODE_SET_ALARM_HOUR_1:
-//   disp.setDispData(0, 0b01110011);
-//   disp.setDispData(1, 0b10000110);
-//   break;
-// case DISPLAY_MODE_SET_ALARM_HOUR_2:
-//   disp.setDispData(0, 0b01110011);
-//   disp.setDispData(1, 0b11011011);
-//   break;
-// case DISPLAY_MODE_SET_ALARM_INTERVAL:
-//   disp.setDispData(0, 0b00000110);
-//   disp.setDispData(1, 0b11111000);
-//   break;
-// default:
-//   break;
-// }
-// disp.setDispData(2, 0x00);
-// disp.setDispData(3, 0x00);
-// }
-
+void showSettingType(saAlarmSettingDataType _type)
+{
+  // ALARM_DATA_ON_OFF   - Al
+  // ALARM_DATA_HOUR_1   - P1:
+  // ALARM_DATA_HOUR_2   - P2:
+  // ALARM_DATA_INTERVAL - It:
+  switch (_type)
+  {
+  case ALARM_DATA_ON_OFF:
+    clkDisplay.setDispData(0, 0b01110111);
+    clkDisplay.setDispData(1, 0b00111000);
+    break;
+  case ALARM_DATA_HOUR_1:
+    clkDisplay.setDispData(0, 0b01110011);
+    clkDisplay.setDispData(1, 0b10000110);
+    break;
+  case ALARM_DATA_HOUR_2:
+    clkDisplay.setDispData(0, 0b01110011);
+    clkDisplay.setDispData(1, 0b11011011);
+    break;
+  case ALARM_DATA_INTERVAL:
+    clkDisplay.setDispData(0, 0b00000110);
+    clkDisplay.setDispData(1, 0b11111000);
+    break;
+  default:
+    break;
+  }
+  clkDisplay.setDispData(2, 0x00);
+  clkDisplay.setDispData(3, 0x00);
+}

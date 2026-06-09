@@ -9,16 +9,8 @@
 
 // ===================================================
 
-SerialAlarm saAlarm(ALARM_RED_PIN, ALARM_GREEN_PIN, ALARM_EEPROM_INDEX);
 shSimpleClock saClock;
-shTaskManager tasks(4);
-
-shHandle return_to_default_mode;  // таймер автовозврата в режим показа времени из любого режима настройки
-shHandle display_guard;           // вывод данных будильника на экран
-shHandle alarm_guard;             // отслеживание будильника
-shHandle alarm_buzzer;            // пищалка будильника
-shHandle show_alarm_setting_mode; // режим показа настроек будильника
-
+saAlarmSettingDataType saAlarmDataType = ALARM_DATA_NO;
 // ===================================================
 void checkButton()
 {
@@ -67,42 +59,39 @@ void checkButton()
   }
 }
 
+// ===================================================
+
 void returnToDefMode()
 {
-//   switch (displayMode)
-//   {
-//   case DISPLAY_MODE_SET_HOUR:
-//   case DISPLAY_MODE_SET_MINUTE:
-//   case DISPLAY_MODE_SET_ALARM_HOUR_1:
-//   case DISPLAY_MODE_SET_ALARM_MINUTE_1:
-//   case DISPLAY_MODE_SET_ALARM_HOUR_2:
-//   case DISPLAY_MODE_SET_ALARM_MINUTE_2:
-//   case DISPLAY_MODE_SET_ALARM_INTERVAL:
-//   case DISPLAY_MODE_ALARM_ON_OFF:
-// #ifdef USE_SET_BRIGHTNESS_MODE
-// #ifdef USE_LIGHT_SENSOR
-//   case DISPLAY_MODE_SET_BRIGHTNESS_MIN:
-// #endif
-//   case DISPLAY_MODE_SET_BRIGHTNESS_MAX:
-// #endif
-//     btnSet.setButtonFlag(BTN_FLAG_EXIT);
-//     break;
-//   case DISPLAY_MODE_SHOW_ALARM_SETTING:
-//     displayMode = DISPLAY_MODE_SHOW_TIME;
-//     tasks.stopTask(show_alarm_setting_mode);
-//     break;
-// #ifdef USE_TEMP_DATA
-//   case DISPLAY_MODE_SHOW_TEMP:
-//     displayMode = DISPLAY_MODE_SHOW_TIME;
-//     tasks.stopTask(show_temp_mode);
-//     break;
-// #endif
-//   default:
-//     break;
-//   }
+  switch (saClock.getDisplayMode())
+  {
+  case DISPLAY_MODE_CUSTOM_1:
+    saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
+    tasks.stopTask(show_alarm_setting_mode);
+    break;
+  case DISPLAY_MODE_CUSTOM_2:
+    break;
+  default:
+    break;
+  }
   tasks.stopTask(return_to_default_mode);
 }
 
+void setDisplayData()
+{
+  switch (saClock.getDisplayMode())
+  {
+  case DISPLAY_MODE_CUSTOM_1:
+    if (!tasks.getTaskState(show_alarm_setting_mode))
+    {
+      showAlarmSetting();
+    }
+    break;
+
+  default:
+    break;
+  }
+}
 
 void checkAlarm()
 {
@@ -156,10 +145,10 @@ void setup()
   saAlarm.init(saClock.getCurrentDateTime());
 
   return_to_default_mode = tasks.addTask(AUTO_EXIT_TIMEOUT * 1000ul, returnToDefMode, false);
-  show_alarm_setting_mode = tasks.addTask(100, showAlarmSetting, false);
-  display_guard = tasks.addTask(50, setDisp);
-  alarm_guard = tasks.addTask(200, checkAlarm);
-  alarm_buzzer = tasks.addTask(50, runAlarmBuzzer, false);
+  show_alarm_setting_mode = tasks.addTask(100ul, showAlarmSetting, false);
+  display_guard = tasks.addTask(50ul, setDisplayData);
+  alarm_guard = tasks.addTask(200ul, checkAlarm);
+  alarm_buzzer = tasks.addTask(50ul, runAlarmBuzzer, false);
 }
 
 void loop()
