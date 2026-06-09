@@ -1,8 +1,6 @@
 #pragma once
 #include <Arduino.h>
-
-// ==== настройки ====================================
-#define ALARM_DURATION 60 // продолжительность сигнала будильника, секунд
+#include "header_file.h"
 
 // ==== пины =========================================
 constexpr uint8_t BUZZER_PIN = 10;     // пин для подключения пищалки
@@ -64,3 +62,28 @@ void checkData(uint8_t &dt, uint8_t max, bool toUp);
  * @param toUp направление изменения данных
  */
 void checkData(uint8_t &dt, uint8_t min, uint8_t max, uint8_t x, bool toUp);
+
+// ===================================================
+
+void checkData(uint8_t &dt, uint8_t max, bool toUp)
+{
+  (toUp) ? dt++ : dt--;
+  if (dt > max)
+  {
+    dt = (toUp) ? 0 : max;
+  }
+}
+
+void checkData(uint8_t &dt, uint8_t min, uint8_t max, uint8_t x, bool toUp)
+{
+  (toUp) ? dt += x : dt -= x;
+  if (dt < min)
+  {
+    dt = min;
+  }
+  else if (dt > max)
+  {
+    dt = max;
+  }
+}
+
