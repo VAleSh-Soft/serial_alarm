@@ -1,20 +1,20 @@
 /**
  * @file alarm.h
- * @author Vladimir Shatalov (valesh-soft@yandex.ru) 
- * 
- * @brief Будильник с возможностью выдачи сигнала через равные интервалы 
+ * @author Vladimir Shatalov (valesh-soft@yandex.ru)
+ *
+ * @brief Будильник с возможностью выдачи сигнала через равные интервалы
  *        времени в заданном промежутке времени начала и окончания
- *        сигнализации;  
- * 
- *        несмотря на использование библиотеки shSimpleClock использовать 
+ *        сигнализации;
+ *
+ *        несмотря на использование библиотеки shSimpleClock использовать
  *        встроенный в нее будильник не получится, т.к. он рассчитан на одно
  *        время срабатывания
- * 
+ *
  * @version 1.0
  * @date 2026-06-09
- * 
+ *
  * @copyright Copyright (c) 2026
- * 
+ *
  */
 #pragma once
 #include <Arduino.h>
@@ -307,29 +307,24 @@ void SerialAlarm::setAlarmInterval(uint8_t _time)
 
 void SerialAlarm::tick(clkDateTime _time)
 {
-  static unsigned long timer = 0;
+  uint16_t tm = _time.hour() * 60 + _time.minute();
+  setLed(tm);
 
-  if (millis() - timer >= 10)
+  if (state == ALARM_ON)
   {
-    uint16_t tm = _time.hour() * 60 + _time.minute();
-    setLed(tm);
-
-    if (state == ALARM_ON)
+    if (tm * 60ul + _time.second() == next_point * 60ul)
     {
-      if (tm * 60ul + _time.second() == next_point * 60ul)
+      state = ALARM_YES;
+      setNextPoint(next_point + read_eeprom_16(ALARM_INTERVAL));
+      if (!checkForInterval(next_point))
       {
-        state = ALARM_YES;
-        setNextPoint(next_point + read_eeprom_16(ALARM_INTERVAL));
-        if (!checkForInterval(next_point))
-        {
-          next_point = getAlarmPoint1();
-        }
+        next_point = getAlarmPoint1();
       }
     }
+  }
 
-    if (state == ALARM_YES)
-    {
-      /* code */
-    }
+  if (state == ALARM_YES)
+  {
+    /* code */
   }
 }

@@ -2,3 +2,4 @@ _build/*
 .vscode/*
 docs/manual.doc
 bin/*
+_burn/*
