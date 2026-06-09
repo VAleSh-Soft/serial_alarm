@@ -8,10 +8,6 @@
 #include "custom_display.h"
 
 // ===================================================
-
-shSimpleClock saClock;
-saAlarmSettingDataType saAlarmDataType = ALARM_DATA_NO;
-// ===================================================
 void checkButton()
 {
   // если в данный момент сработал будильник, клик любой кнопкой отключает
@@ -33,14 +29,14 @@ void checkButton()
 
   switch (saClock.getDisplayMode())
   {
-    // в режиме показа времени
+  // в режиме показа времени
   case DISPLAY_MODE_SHOW_TIME:
     // кнопка Set
     switch (saClock.getButtonState(CLK_BTN_SET))
     {
     // двойной клик кнопки для включения режима настройки будильника
     case BTN_DBLCLICK:
-      // saClock.setDisplayMode(DISPLAY_MODE_CUSTOM_2);
+      saClock.setDisplayMode(DISPLAY_MODE_CUSTOM_2);
       saClock.resetButtonState(CLK_BTN_SET);
       break;
     }
@@ -49,10 +45,17 @@ void checkButton()
     {
     // клик кнопкой для вывода на экран настроек будильника
     case BTN_ONECLICK:
-      saClock.setDisplayMode(DISPLAY_MODE_CUSTOM_1);
-      saClock.resetButtonState(CLK_BTN_DOWN);
+      if (saAlarm.getAlarmState() != ALARM_OFF)
+      {
+        saClock.setDisplayMode(DISPLAY_MODE_CUSTOM_1);
+        saClock.resetButtonState(CLK_BTN_DOWN);
+      }
       break;
     }
+    break;
+
+  // в режиме настройки будильника
+  case DISPLAY_MODE_CUSTOM_2:
     break;
   default:
     break;
@@ -65,11 +68,8 @@ void returnToDefMode()
 {
   switch (saClock.getDisplayMode())
   {
-  case DISPLAY_MODE_CUSTOM_1:
-    saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
-    tasks.stopTask(show_alarm_setting_mode);
-    break;
   case DISPLAY_MODE_CUSTOM_2:
+    saClock.setButtonFlag(CLK_BTN_SET, CLK_BTN_FLAG_EXIT);
     break;
   default:
     break;
@@ -87,7 +87,13 @@ void setDisplayData()
       showAlarmSetting();
     }
     break;
-
+  case DISPLAY_MODE_CUSTOM_2:
+    if (!tasks.getTaskState(set_time_mode))
+    {
+      saAlarmDataType = ALARM_DATA_ON_OFF;
+      showTimeSetting();
+    }
+    break;
   default:
     break;
   }
@@ -149,6 +155,7 @@ void setup()
   display_guard = tasks.addTask(50ul, setDisplayData);
   alarm_guard = tasks.addTask(200ul, checkAlarm);
   alarm_buzzer = tasks.addTask(50ul, runAlarmBuzzer, false);
+  set_time_mode = tasks.addTask(100, showTimeSetting, false);
 }
 
 void loop()
