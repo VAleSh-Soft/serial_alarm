@@ -147,6 +147,7 @@ void runAlarmBuzzer()
 // ===================================================
 void setup()
 {
+  Serial.begin(115200);
   saClock.init();
   saAlarm.init(saClock.getCurrentDateTime());
 

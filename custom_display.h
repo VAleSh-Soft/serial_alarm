@@ -24,13 +24,13 @@ void getData(uint8_t &h, uint8_t &m)
   {
   case ALARM_DATA_HOUR_1:
   case ALARM_DATA_MINUTE_1:
-    h = saAlarm.getAlarmPoint1() / 60;
-    m = saAlarm.getAlarmPoint1() % 60;
+    h = saAlarm.getAlarmPoint1() / 60u;
+    m = saAlarm.getAlarmPoint1() % 60u;
     break;
   case ALARM_DATA_HOUR_2:
   case ALARM_DATA_MINUTE_2:
-    h = saAlarm.getAlarmPoint2() / 60;
-    m = saAlarm.getAlarmPoint2() % 60;
+    h = saAlarm.getAlarmPoint2() / 60u;
+    m = saAlarm.getAlarmPoint2() % 60u;
     break;
   case ALARM_DATA_ON_OFF:
     h = (uint8_t)saAlarm.getOnOffAlarm();
@@ -102,7 +102,7 @@ void showTimeSetting()
   {
     tasks.startTask(set_time_mode);
     tasks.startTask(return_to_default_mode);
-    if (saAlarmDataType > ALARM_DATA_ON_OFF)
+    if ((uint8_t)saAlarmDataType > (uint8_t)ALARM_DATA_ON_OFF)
     {
       n = 0;
     }
@@ -114,6 +114,12 @@ void showTimeSetting()
                 saAlarmDataType == ALARM_DATA_HOUR_2 ||
                 saAlarmDataType == ALARM_DATA_INTERVAL))
   {
+    if (!n)
+    {
+      clkDisplay.clear();
+      n++;
+      return;
+    }
     n++;
     showSettingType(saAlarmDataType);
     return;
@@ -134,12 +140,18 @@ void showTimeSetting()
     {
       n = 0;
       if (saAlarmDataType == ALARM_DATA_INTERVAL ||
-          (saAlarmDataType == ALARM_DATA_ON_OFF && saAlarm.getAlarmState() == ALARM_OFF))
+          (saAlarmDataType == ALARM_DATA_ON_OFF && saAlarm.getAlarmState() == ALARM_OFF) ||
+          (saAlarmDataType == ALARM_DATA_MINUTE_2 && saAlarm.getAlarmPoint1() == saAlarm.getAlarmPoint2()))
       {
+        // выход из режима настройки по клику кнопкой Set в случае, если:
+        // 1. мы находимся в режиме настройки интервала (он последний);
+        // 2. если будильник выключен;
+        // 3. если время начала и окончания сигнализации одинаково (однократное срабатывание);
         saClock.setButtonFlag(CLK_BTN_SET, CLK_BTN_FLAG_EXIT);
       }
       else
       {
+        // в остальных случаях переходим в следующий режим настройки
         saAlarmDataType++;
       }
     }
@@ -250,7 +262,7 @@ void showAlarmSetting()
     break;
   }
 
-  (n < 5) ? showSettingType(m) : showTimeData(x / 60, x % 60);
+  (n < 8) ? showSettingType(m) : showTimeData(x / 60, x % 60);
 
   if (++n > 19)
   {

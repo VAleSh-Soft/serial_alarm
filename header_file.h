@@ -84,51 +84,12 @@ void setDisplayData();
 void checkAlarm();
 void runAlarmBuzzer();
 
-void showTimeData(uint8_t hour, uint8_t minute);
-
 // ==== вывод данных =================================
-/**
- * @brief вывод на экран данных по состоянию будильника
- *
- * @param _state состояние будильника - включен/выключен
- */
+void showTimeData(uint8_t hour, uint8_t minute);
+void saveData(uint8_t h, uint8_t m);
 void showAlarmState(uint8_t _state);
-
-/**
- * @brief вывод на экран текстовой метки настраиваемого типа данных будильника
- *
- * @param mode режим экрана настройки
- */
 void showSettingType(saAlarmSettingDataType _type);
-
-// // ==== часы =========================================
-// /**
-//  * @brief сохранение времени после настройки
-//  *
-//  * @param hour часы
-//  * @param minute минуты
-//  */
-// void saveTime(uint8_t hour, uint8_t minute);
-
-// ==== разное =======================================
-/**
- * @brief изменение данных на одну единицу с контролем выхода за предельное значение
- *
- * @param dt изменяемые данные
- * @param max максимальное значение
- * @param toUp направление изменения данных
- */
 void checkData(uint8_t &dt, uint8_t max, bool toUp);
-
-/**
- * @brief изменение данных на заданное значение с контролем выхода за предельные значение
- *
- * @param dt изменяемые данные
- * @param min нижняя граница значения
- * @param max верхняя граница значения
- * @param x величина изменения значения
- * @param toUp направление изменения данных
- */
 void checkData(uint8_t &dt, uint8_t min, uint8_t max, uint8_t x, bool toUp);
 
 // ===================================================
