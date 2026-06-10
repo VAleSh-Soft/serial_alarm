@@ -91,16 +91,16 @@ void checkSettingData(uint8_t &h, uint8_t &m, bool dir)
   }
 }
 
-void showTimeSetting()
+void showAlarmSettingInterface()
 {
   static bool time_checked = false;
   static uint8_t curHour = 0;
   static uint8_t curMinute = 0;
   static uint8_t n = 10;
 
-  if (!tasks.getTaskState(set_time_mode))
+  if (!tasks.getTaskState(set_alarm_mode))
   {
-    tasks.startTask(set_time_mode);
+    tasks.startTask(set_alarm_mode);
     tasks.startTask(return_to_default_mode);
     if ((uint8_t)saAlarmDataType > (uint8_t)ALARM_DATA_ON_OFF)
     {
@@ -116,7 +116,6 @@ void showTimeSetting()
   {
     if (!n)
     {
-      clkDisplay.clear();
       n++;
       return;
     }
@@ -153,13 +152,16 @@ void showTimeSetting()
       {
         // в остальных случаях переходим в следующий режим настройки
         saAlarmDataType++;
+        // перезапускаем интерфейс, чтобы заново считались данные для настройки
+        tasks.stopTask(set_alarm_mode);
       }
     }
     if (saClock.getButtonFlag(CLK_BTN_SET) == CLK_BTN_FLAG_EXIT)
     {
       tasks.stopTask(return_to_default_mode);
-      tasks.stopTask(set_time_mode);
+      tasks.stopTask(set_alarm_mode);
       saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
+      saAlarmDataType = ALARM_DATA_NO;
     }
     saClock.setButtonFlag(CLK_BTN_SET, CLK_BTN_FLAG_NONE);
   }

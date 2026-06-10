@@ -13,8 +13,8 @@
 #define TM1637_DISPLAY
 
 // ---- пины для подключения индикатора ----
-int8_t constexpr DISPLAY_CLK_PIN = 8; // пин для подключения экрана - CLK
-int8_t constexpr DISPLAY_DAT_PIN = 9; // пин для подключения экрана - DAT
+int8_t constexpr DISPLAY_CLK_PIN = 5; // пин для подключения экрана - CLK
+int8_t constexpr DISPLAY_DAT_PIN = 6; // пин для подключения экрана - DAT
 
 // ==== кнопки =======================================
 
@@ -51,9 +51,9 @@ uint16_t constexpr TIMEOUT_OF_DBLCLICK = 300;   // интервал двойно
  * если кнопка не будет использоваться, нужно указать -1;
  * в этом случае ее объект не будет создаваться в памяти;
  */
-int8_t constexpr BTN_SET_PIN = 7;   // пин для подключения кнопки Set
-int8_t constexpr BTN_DOWN_PIN = 6;  // пин для подключения кнопки Down
-int8_t constexpr BTN_UP_PIN = 5;    // пин для подключения кнопки Up
+int8_t constexpr BTN_SET_PIN = 10;   // пин для подключения кнопки Set
+int8_t constexpr BTN_DOWN_PIN = 9;  // пин для подключения кнопки Down
+int8_t constexpr BTN_UP_PIN = 8;    // пин для подключения кнопки Up
 int8_t constexpr BTN_ADD1_PIN = -1; // пин для подключения первой дополнительной кнопки
 int8_t constexpr BTN_ADD2_PIN = -1; // пин для подключения второй дополнительной кнопки
 

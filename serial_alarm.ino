@@ -88,10 +88,13 @@ void setDisplayData()
     }
     break;
   case DISPLAY_MODE_CUSTOM_2:
-    if (!tasks.getTaskState(set_time_mode))
+    if (!tasks.getTaskState(set_alarm_mode))
     {
-      saAlarmDataType = ALARM_DATA_ON_OFF;
-      showTimeSetting();
+      if (saAlarmDataType == ALARM_DATA_NO)
+      {
+        saAlarmDataType = ALARM_DATA_ON_OFF;
+      }
+      showAlarmSettingInterface();
     }
     break;
   default:
@@ -147,7 +150,6 @@ void runAlarmBuzzer()
 // ===================================================
 void setup()
 {
-  Serial.begin(115200);
   saClock.init();
   saAlarm.init(saClock.getCurrentDateTime());
 
@@ -156,7 +158,7 @@ void setup()
   display_guard = tasks.addTask(50ul, setDisplayData);
   alarm_guard = tasks.addTask(200ul, checkAlarm);
   alarm_buzzer = tasks.addTask(50ul, runAlarmBuzzer, false);
-  set_time_mode = tasks.addTask(100, showTimeSetting, false);
+  set_alarm_mode = tasks.addTask(100, showAlarmSettingInterface, false);
 }
 
 void loop()
