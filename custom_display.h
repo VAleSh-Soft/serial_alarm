@@ -109,16 +109,10 @@ void showAlarmSettingInterface()
     getData(curHour, curMinute);
     time_checked = false;
   }
-
   if (n < 8 && (saAlarmDataType == ALARM_DATA_HOUR_1 ||
                 saAlarmDataType == ALARM_DATA_HOUR_2 ||
                 saAlarmDataType == ALARM_DATA_INTERVAL))
   {
-    if (!n)
-    {
-      n++;
-      return;
-    }
     n++;
     showSettingType(saAlarmDataType);
     return;
@@ -154,16 +148,19 @@ void showAlarmSettingInterface()
         saAlarmDataType++;
         // перезапускаем интерфейс, чтобы заново считались данные для настройки
         tasks.stopTask(set_alarm_mode);
+        saClock.setButtonFlag(CLK_BTN_SET, CLK_BTN_FLAG_NONE);
+        // и выходим из метода, чтобы избежать мелькания артефактов на экране при смене режима
+        return;
       }
     }
-    if (saClock.getButtonFlag(CLK_BTN_SET) == CLK_BTN_FLAG_EXIT)
+    if (saClock.getButtonFlag(CLK_BTN_SET, true) == CLK_BTN_FLAG_EXIT)
     {
       tasks.stopTask(return_to_default_mode);
       tasks.stopTask(set_alarm_mode);
       saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
       saAlarmDataType = ALARM_DATA_NO;
+      return;
     }
-    saClock.setButtonFlag(CLK_BTN_SET, CLK_BTN_FLAG_NONE);
   }
 
   if ((saClock.getButtonFlag(CLK_BTN_UP) == CLK_BTN_FLAG_NEXT) ||
@@ -238,6 +235,11 @@ void showAlarmSetting()
 {
   static uint8_t n = 0;
   static uint8_t k = 0;
+  // количество циклов вывода информации - если время начала и окончания
+  // сигнализации одинаковое - выводится только одно время, иначе выводятся обе
+  // точки и интервал
+  uint8_t rep = (saAlarm.getAlarmPoint1() == saAlarm.getAlarmPoint2()) ? 1 : 3; 
+
 
   if (!tasks.getTaskState(show_alarm_setting_mode))
   {
@@ -269,7 +271,7 @@ void showAlarmSetting()
   if (++n > 19)
   {
     n = 0;
-    if (++k > 2)
+    if (++k >= rep)
     {
       tasks.stopTask(show_alarm_setting_mode);
       saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
