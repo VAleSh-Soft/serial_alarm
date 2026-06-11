@@ -1,157 +1,117 @@
 #pragma once
 #include <Arduino.h>
-#include "shSimpleRTC.h"
-
-// ==== параметры условной компиляции ================
-#define USE_LIGHT_SENSOR        // использовать или нет датчик света на пине А3 для регулировки яркости экрана
-#define USE_SET_BRIGHTNESS_MODE // использовать режим настройки минимального и максимального уровней яркости
-#define USE_TEMP_DATA           // использовать или нет вывод температуры по клику кнопкой Up
-#ifdef USE_TEMP_DATA
-// #define USE_DS18B20 // использовать для вывода температуры датчик DS18b20
-#endif
+#include <shTaskManager.h>
+#include "header_file.h"
 
 // ==== пины =========================================
-
-// ==== кнопки =======================================
-#define BTN_SET_PIN 6  // пин для подключения кнопки Set
-#define BTN_DOWN_PIN 5 // пин для подключения кнопки Down
-#define BTN_UP_PIN 4   // пин для подключения кнопки Up
-// ==== экран ========================================
-#define DISPLAY_CLK_PIN 11 // пин для подключения экрана - CLK
-#define DISPLAY_DAT_PIN 10 // пин для подключения экрана - DAT
-// ==== DS3231 =======================================
-#define DS3231_SDA_PIN A4 // пин для подключения вывода SDA модуля DS3231 (не менять!!!)
-#define DS3231_SCL_PIN A5 // пин для подключения вывода SCL модуля DS3231 (не менять!!!)
-// ==== пищалка ======================================
-#define BUZZER_PIN 7 // пин для подключения пищалки
-// ==== светодиод ====================================
-#define ALARM_RED_PIN 8   // пин для подключения красного светодиода - индикатора будильника
-#define ALARM_GREEN_PIN 9 // пин для подключения зеленого светодиода - индикатора будильника
-// ==== датчики ======================================
-#ifdef USE_LIGHT_SENSOR
-#define LIGHT_SENSOR_PIN A3 // пин для подключения датчика света
-#endif
-#ifdef USE_DS18B20
-#define DS18B20_PIN 3 // пин для подключения датчика DS18b20
-#endif
+constexpr uint8_t BUZZER_PIN = 7;      // пин для подключения пищалки
+constexpr uint8_t ALARM_RED_PIN = 2;   // пин для подключения красного светодиода - индикатора будильника
+constexpr uint8_t ALARM_GREEN_PIN = 3; // пин для подключения зеленого светодиода - индикатора будильника
 
 // ==== EEPROM =======================================
-#define ALARM_EEPROM_INDEX 100 // индекс в EEPROM для сохранения настроек будильника
-#ifdef USE_LIGHT_SENSOR
-#define MIN_BRIGHTNESS_VALUE 98 // индекс в EEPROM для сохранения  минимального значения яркости экрана
-#endif
-#define MAX_BRIGHTNESS_VALUE 99 // индекс в EEPROM для сохранения  максимального значение яркости экрана
+#define ALARM_EEPROM_INDEX 50 // индекс в EEPROM для сохранения настроек будильника; индексы 96..99 заняты настройками часов
 
-// ==== режимы экрана ================================
-enum DisplayMode : uint8_t
+// ===================================================
+shTaskManager tasks(6);
+
+shHandle return_to_default_mode;  // таймер автовозврата в режим показа времени из любого режима настройки
+shHandle display_guard;           // вывод данных будильника на экран
+shHandle alarm_guard;             // отслеживание будильника
+shHandle alarm_buzzer;            // пищалка будильника
+shHandle show_alarm_setting_mode; // режим показа настроек будильника
+shHandle set_alarm_mode;          // режим настройки будильника
+
+// ===================================================
+
+enum saAlarmSettingDataType : uint8_t
 {
-  DISPLAY_MODE_SHOW_TIME,          // основной режим - вывод времени на индикатор
-  DISPLAY_MODE_SET_HOUR,           // режим настройки часов
-  DISPLAY_MODE_SET_MINUTE,         // режим настройки минут
-  DISPLAY_MODE_ALARM_ON_OFF,       // режим настройки будильника - вкл/выкл
-  DISPLAY_MODE_SET_ALARM_HOUR_1,   // режим настройки будильника, начало интервала - часы
-  DISPLAY_MODE_SET_ALARM_MINUTE_1, // режим настройки будильника, начало интервала - минуты
-  DISPLAY_MODE_SET_ALARM_HOUR_2,   // режим настройки будильника, конец интервала - часы
-  DISPLAY_MODE_SET_ALARM_MINUTE_2, // режим настройки будильника, конец интервала - минуты
-  DISPLAY_MODE_SET_ALARM_INTERVAL, // режим настройки будильника, интервал срабатывания
-  DISPLAY_MODE_SHOW_ALARM_SETTING  // вывод на экран заданных установок будильника
-#ifdef USE_TEMP_DATA
-  ,
-  DISPLAY_MODE_SHOW_TEMP // режим вывода температуры
-#endif
-#ifdef USE_SET_BRIGHTNESS_MODE
-#ifdef USE_LIGHT_SENSOR
-  ,
-  DISPLAY_MODE_SET_BRIGHTNESS_MIN // режим настройки минимального уровня яркости экрана
-#endif
-  ,
-  DISPLAY_MODE_SET_BRIGHTNESS_MAX // режим настройки максимального уровня яркости экрана
-#endif
+  ALARM_DATA_NO,
+  ALARM_DATA_ON_OFF,
+  ALARM_DATA_HOUR_1,
+  ALARM_DATA_MINUTE_1,
+  ALARM_DATA_HOUR_2,
+  ALARM_DATA_MINUTE_2,
+  ALARM_DATA_INTERVAL
 };
+
+static saAlarmSettingDataType getNext(const saAlarmSettingDataType current)
+{
+  switch (current)
+  {
+  case ALARM_DATA_NO:
+  case ALARM_DATA_ON_OFF:
+  case ALARM_DATA_HOUR_1:
+  case ALARM_DATA_MINUTE_1:
+  case ALARM_DATA_HOUR_2:
+  case ALARM_DATA_MINUTE_2:
+    uint8_t x;
+    x = (uint8_t)current;
+    return (saAlarmSettingDataType)++x;
+  default:;
+  }
+  return ALARM_DATA_NO;
+}
+
+// префиксный оператор (++obj)
+saAlarmSettingDataType &operator++(saAlarmSettingDataType &obj)
+{
+  obj = getNext(obj);
+  return obj;
+}
+
+// постфиксный оператор (obj++)
+saAlarmSettingDataType operator++(saAlarmSettingDataType &obj, const int)
+{
+  const saAlarmSettingDataType copy = obj;
+  obj = getNext(obj);
+  return copy;
+}
+
+saAlarmSettingDataType saAlarmDataType = ALARM_DATA_NO;
+
+// ===================================================
+
+shSimpleClock saClock;
 
 // ==== опрос кнопок =================================
 void checkButton();
-void checkSetButton();
-void checkUpDownButton();
 
 // ==== задачи =======================================
-void rtcNow();
-void blink();
-void restartBlink();
 void returnToDefMode();
-void showTimeSetting();
+void showAlarmSettingInterface();
 void showAlarmSetting();
-void setDisp();
+void setDisplayData();
 void checkAlarm();
 void runAlarmBuzzer();
-#ifdef USE_TEMP_DATA
-void showTemp();
-#ifdef USE_DS18B20
-void checkDS18b20();
-#endif
-#endif
-#ifdef USE_LIGHT_SENSOR
-void setBrightness();
-#endif
-#ifdef USE_SET_BRIGHTNESS_MODE
-void showBrightnessSetting();
-#endif
 
 // ==== вывод данных =================================
-/**
- * @brief вывод данных на экран
- *
- */
-void setDisplay();
-
-/**
- * @brief вывод на экран данных в режиме настройки времени или будильника
- *
- * @param hour часы
- * @param minute минуты
- */
 void showTimeData(uint8_t hour, uint8_t minute);
-
-/**
- * @brief вывод на экран данных по состоянию будильника
- *
- * @param _state состояние будильника - включен/выключен
- */
+void saveData(uint8_t h, uint8_t m);
 void showAlarmState(uint8_t _state);
-
-/**
- * @brief вывод на экран текстовой метки настраиваемого типа данных будильника
- *
- * @param mode режим экрана
- */
-void showSettingType(DisplayMode mode);
-
-// ==== часы =========================================
-/**
- * @brief сохранение времени после настройки
- *
- * @param hour часы
- * @param minute минуты
- */
-void saveTime(uint8_t hour, uint8_t minute);
-
-// ==== разное =======================================
-/**
- * @brief изменение данных на одну единицу с контролем выхода за предельное значение
- *
- * @param dt изменяемые данные
- * @param max максимальное значение
- * @param toUp направление изменения данных
- */
+void showSettingType(saAlarmSettingDataType _type);
 void checkData(uint8_t &dt, uint8_t max, bool toUp);
-
-/**
- * @brief изменение данных на заданное значение с контролем выхода за предельные значение
- *
- * @param dt изменяемые данные
- * @param min нижняя граница значения
- * @param max верхняя граница значения
- * @param x величина изменения значения
- * @param toUp направление изменения данных
- */
 void checkData(uint8_t &dt, uint8_t min, uint8_t max, uint8_t x, bool toUp);
+
+// ===================================================
+
+void checkData(uint8_t &dt, uint8_t max, bool toUp)
+{
+  (toUp) ? dt++ : dt--;
+  if (dt > max)
+  {
+    dt = (toUp) ? 0 : max;
+  }
+}
+
+void checkData(uint8_t &dt, uint8_t min, uint8_t max, uint8_t x, bool toUp)
+{
+  (toUp) ? dt += x : dt -= x;
+  if (dt < min)
+  {
+    dt = min;
+  }
+  else if (dt > max)
+  {
+    dt = max;
+  }
+}
