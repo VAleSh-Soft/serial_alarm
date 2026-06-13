@@ -136,7 +136,7 @@ void runAlarmBuzzer()
     return;
   }
 
-  tone(BUZZER_PIN, pgm_read_dword(&pick[0][n]), pgm_read_dword(&pick[1][n]));
+  tone(ALARM_BUZZER_PIN, pgm_read_dword(&pick[0][n]), pgm_read_dword(&pick[1][n]));
   tasks.setTaskInterval(alarm_buzzer, pgm_read_dword(&pick[1][n]), true);
   if (++n >= 8)
   {

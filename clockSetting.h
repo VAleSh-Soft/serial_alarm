@@ -51,7 +51,7 @@ uint16_t constexpr TIMEOUT_OF_DBLCLICK = 300;   // интервал двойно
  * если кнопка не будет использоваться, нужно указать -1;
  * в этом случае ее объект не будет создаваться в памяти;
  */
-int8_t constexpr BTN_SET_PIN = 10;   // пин для подключения кнопки Set
+int8_t constexpr BTN_SET_PIN = 10;  // пин для подключения кнопки Set
 int8_t constexpr BTN_DOWN_PIN = 9;  // пин для подключения кнопки Down
 int8_t constexpr BTN_UP_PIN = 8;    // пин для подключения кнопки Up
 int8_t constexpr BTN_ADD1_PIN = -1; // пин для подключения первой дополнительной кнопки
@@ -68,7 +68,7 @@ int8_t constexpr BTN_ADD2_PIN = -1; // пин для подключения вт
 // ---- вывод температуры ------------------
 #define USE_TEMP_DATA // использовать вывод на экран температуры по клику кнопкой Up
 
-#if defined(USE_ALARM) || defined(USE_BUZZER_FOR_BUTTON)
+#if defined(USE_BUZZER_FOR_BUTTON)
 
 // ==== пищалка ======================================
 int8_t constexpr BUZZER_PIN = 7; // пин для подключения пищалки
@@ -118,8 +118,6 @@ int8_t constexpr NTC_PIN = A0;
 // ==== прочие настройки =============================
 
 #define AUTO_EXIT_TIMEOUT 6 // время автоматического возврата в режим показа текущего времени из любых других режимов при отсутствии активности пользователя, секунд
-
-// #define USE_CLOCK_EVENT // использовать события часов - ежесекундное событие и событие будильника
 
 #if defined(USE_LIGHT_SENSOR) || defined(USE_NTC)
 
