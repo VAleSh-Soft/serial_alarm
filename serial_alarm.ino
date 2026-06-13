@@ -1,6 +1,5 @@
 #include <Wire.h>
 #include <EEPROM.h>
-#include <shTaskManager.h>
 #include "clockSetting.h"
 #include <shSimpleClock.h>
 #include "header_file.h"
@@ -78,7 +77,7 @@ void returnToDefMode()
   default:
     break;
   }
-  tasks.stopTask(return_to_default_mode);
+  saClock.stopAdditionalTask(return_to_default_mode);
 }
 
 void setDisplayData()
@@ -86,13 +85,13 @@ void setDisplayData()
   switch (saClock.getDisplayMode())
   {
   case DISPLAY_MODE_CUSTOM_1:
-    if (!tasks.getTaskState(show_alarm_setting_mode))
+    if (!saClock.getAdditionalTaskState(show_alarm_setting_mode))
     {
       showAlarmSetting();
     }
     break;
   case DISPLAY_MODE_CUSTOM_2:
-    if (!tasks.getTaskState(set_alarm_mode))
+    if (!saClock.getAdditionalTaskState(set_alarm_mode))
     {
       if (saAlarmDataType == ALARM_DATA_NO)
       {
@@ -109,7 +108,7 @@ void setDisplayData()
 void checkAlarm()
 {
   saAlarm.tick(saClock.getCurrentDateTime());
-  if (saAlarm.getAlarmState() == ALARM_YES && !tasks.getTaskState(alarm_buzzer))
+  if (saAlarm.getAlarmState() == ALARM_YES && !saClock.getAdditionalTaskState(alarm_buzzer))
   {
     runAlarmBuzzer();
   }
@@ -124,28 +123,28 @@ void runAlarmBuzzer()
       {2000, 0, 2000, 0, 2000, 0, 2000, 0},
       {70, 70, 70, 70, 70, 70, 70, 510}};
 
-  if (!tasks.getTaskState(alarm_buzzer))
+  if (!saClock.getAdditionalTaskState(alarm_buzzer))
   {
-    tasks.startTask(alarm_buzzer);
+    saClock.startAdditionalTask(alarm_buzzer);
     n = 0;
     k = 0;
   }
   else if (saAlarm.getAlarmState() != ALARM_YES)
   { // остановка пищалки, если будильник отключен
-    tasks.stopTask(alarm_buzzer);
+    saClock.stopAdditionalTask(alarm_buzzer);
     return;
   }
 
   tone(ALARM_BUZZER_PIN, pgm_read_dword(&pick[0][n]), pgm_read_dword(&pick[1][n]));
-  tasks.setTaskInterval(alarm_buzzer, pgm_read_dword(&pick[1][n]), true);
+  saClock.setAdditionalTaskInterval(alarm_buzzer, pgm_read_dword(&pick[1][n]), true);
   if (++n >= 8)
   {
     n = 0;
     if (++k >= ALARM_DURATION)
     { // остановка пищалки через заданное число секунд
       k = 0;
-      tasks.stopTask(alarm_buzzer);
-      tasks.setTaskInterval(alarm_buzzer, 50, false);
+      saClock.stopAdditionalTask(alarm_buzzer);
+      saClock.setAdditionalTaskInterval(alarm_buzzer, 50, false);
       saAlarm.setAlarmState(ALARM_ON);
     }
   }
@@ -154,20 +153,20 @@ void runAlarmBuzzer()
 // ===================================================
 void setup()
 {
+  saClock.setAdditionalTaskCount(6);
   saClock.init();
   saAlarm.init(saClock.getCurrentDateTime());
 
-  return_to_default_mode = tasks.addTask(AUTO_EXIT_TIMEOUT * 1000ul, returnToDefMode, false);
-  show_alarm_setting_mode = tasks.addTask(100ul, showAlarmSetting, false);
-  display_guard = tasks.addTask(50ul, setDisplayData);
-  alarm_guard = tasks.addTask(200ul, checkAlarm);
-  alarm_buzzer = tasks.addTask(50ul, runAlarmBuzzer, false);
-  set_alarm_mode = tasks.addTask(100, showAlarmSettingInterface, false);
+  return_to_default_mode = saClock.addAdditionalTask(AUTO_EXIT_TIMEOUT * 1000ul, returnToDefMode, false);
+  show_alarm_setting_mode = saClock.addAdditionalTask(100ul, showAlarmSetting, false);
+  display_guard = saClock.addAdditionalTask(50ul, setDisplayData);
+  alarm_guard = saClock.addAdditionalTask(200ul, checkAlarm);
+  alarm_buzzer = saClock.addAdditionalTask(50ul, runAlarmBuzzer, false);
+  set_alarm_mode = saClock.addAdditionalTask(100, showAlarmSettingInterface, false);
 }
 
 void loop()
 {
   saClock.tick();
   checkButton();
-  tasks.tick();
 }

@@ -98,10 +98,10 @@ void showAlarmSettingInterface()
   static uint8_t curMinute = 0;
   static uint8_t n = 10;
 
-  if (!tasks.getTaskState(set_alarm_mode))
+  if (!saClock.getAdditionalTaskState(set_alarm_mode))
   {
-    tasks.startTask(set_alarm_mode);
-    tasks.startTask(return_to_default_mode);
+    saClock.startAdditionalTask(set_alarm_mode);
+    saClock.startAdditionalTask(return_to_default_mode);
     if ((uint8_t)saAlarmDataType > (uint8_t)ALARM_DATA_ON_OFF)
     {
       n = 0;
@@ -121,7 +121,7 @@ void showAlarmSettingInterface()
   // опрос кнопок =====================
   if ((uint8_t)saClock.getButtonFlag(CLK_BTN_SET) > (uint8_t)CLK_BTN_FLAG_NONE)
   {
-    tasks.restartTask(return_to_default_mode);
+    saClock.startAdditionalTask(return_to_default_mode);
 
     if (time_checked)
     {
@@ -147,7 +147,7 @@ void showAlarmSettingInterface()
         // в остальных случаях переходим в следующий режим настройки
         saAlarmDataType++;
         // перезапускаем интерфейс, чтобы заново считались данные для настройки
-        tasks.stopTask(set_alarm_mode);
+        saClock.stopAdditionalTask(set_alarm_mode);
         saClock.setButtonFlag(CLK_BTN_SET, CLK_BTN_FLAG_NONE);
         // и выходим из метода, чтобы избежать мелькания артефактов на экране при смене режима
         return;
@@ -155,8 +155,8 @@ void showAlarmSettingInterface()
     }
     if (saClock.getButtonFlag(CLK_BTN_SET, true) == CLK_BTN_FLAG_EXIT)
     {
-      tasks.stopTask(return_to_default_mode);
-      tasks.stopTask(set_alarm_mode);
+      saClock.stopAdditionalTask(return_to_default_mode);
+      saClock.stopAdditionalTask(set_alarm_mode);
       saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
       saAlarmDataType = ALARM_DATA_NO;
       return;
@@ -166,7 +166,7 @@ void showAlarmSettingInterface()
   if ((saClock.getButtonFlag(CLK_BTN_UP) == CLK_BTN_FLAG_NEXT) ||
       (saClock.getButtonFlag(CLK_BTN_DOWN, true) == CLK_BTN_FLAG_NEXT))
   {
-    tasks.restartTask(return_to_default_mode);
+    saClock.startAdditionalTask(return_to_default_mode);
     checkSettingData(curHour,
                      curMinute,
                      (saClock.getButtonFlag(CLK_BTN_UP, true) == CLK_BTN_FLAG_NEXT));
@@ -241,9 +241,9 @@ void showAlarmSetting()
   uint8_t rep = (saAlarm.getAlarmPoint1() == saAlarm.getAlarmPoint2()) ? 1 : 3; 
 
 
-  if (!tasks.getTaskState(show_alarm_setting_mode))
+  if (!saClock.getAdditionalTaskState(show_alarm_setting_mode))
   {
-    tasks.startTask(show_alarm_setting_mode);
+    saClock.startAdditionalTask(show_alarm_setting_mode);
     n = 0;
     k = 0;
   }
@@ -273,7 +273,7 @@ void showAlarmSetting()
     n = 0;
     if (++k >= rep)
     {
-      tasks.stopTask(show_alarm_setting_mode);
+      saClock.stopAdditionalTask(show_alarm_setting_mode);
       saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
     }
   }

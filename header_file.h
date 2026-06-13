@@ -1,6 +1,5 @@
 #pragma once
 #include <Arduino.h>
-#include <shTaskManager.h>
 #include "header_file.h"
 
 // ==== пины =========================================
@@ -12,14 +11,12 @@ constexpr uint8_t ALARM_GREEN_PIN = 3;  // пин для подключения 
 #define ALARM_EEPROM_INDEX 50 // индекс в EEPROM для сохранения настроек будильника; индексы 96..99 заняты настройками часов
 
 // ===================================================
-shTaskManager tasks(6);
-
-shHandle return_to_default_mode;  // таймер автовозврата в режим показа времени из любого режима настройки
-shHandle display_guard;           // вывод данных будильника на экран
-shHandle alarm_guard;             // отслеживание будильника
-shHandle alarm_buzzer;            // пищалка будильника
-shHandle show_alarm_setting_mode; // режим показа настроек будильника
-shHandle set_alarm_mode;          // режим настройки будильника
+clkHandle return_to_default_mode;  // таймер автовозврата в режим показа времени из любого режима настройки
+clkHandle display_guard;           // вывод данных будильника на экран
+clkHandle alarm_guard;             // отслеживание будильника
+clkHandle alarm_buzzer;            // пищалка будильника
+clkHandle show_alarm_setting_mode; // режим показа настроек будильника
+clkHandle set_alarm_mode;          // режим настройки будильника
 
 // ===================================================
 
