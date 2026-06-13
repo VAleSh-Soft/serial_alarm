@@ -39,10 +39,6 @@ void checkButton()
       saClock.setDisplayMode(DISPLAY_MODE_CUSTOM_2);
       saClock.resetButtonState(CLK_BTN_SET);
       break;
-    }
-    // кнопка Down
-    switch (saClock.getButtonState(CLK_BTN_DOWN))
-    {
     // клик кнопкой для вывода на экран настроек будильника
     case BTN_ONECLICK:
       if (saAlarm.getAlarmState() != ALARM_OFF)
@@ -56,6 +52,14 @@ void checkButton()
 
   // в режиме настройки будильника
   case DISPLAY_MODE_CUSTOM_2:
+    // кнопка Set
+    switch (saClock.getButtonState(CLK_BTN_SET))
+    {
+    // удержание нажатой кнопки для возврата в режим показа времени
+    case BTN_DBLCLICK:
+      returnToDefMode();
+      break;
+    }
     break;
   default:
     break;

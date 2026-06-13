@@ -59,6 +59,9 @@ int8_t constexpr BTN_ADD2_PIN = -1; // пин для подключения вт
 
 // ==== дополнительные опции ========================
 
+// ---- календарь -------------------------------
+// #define USE_CALENDAR // использовать вывод даты по клику кнопкой Down
+
 // ---- режим настройки уровней яркости ---------
 #define USE_SET_BRIGHTNESS_MODE // использовать режим настройки яркости экрана
 
@@ -68,7 +71,7 @@ int8_t constexpr BTN_ADD2_PIN = -1; // пин для подключения вт
 #if defined(USE_ALARM) || defined(USE_BUZZER_FOR_BUTTON)
 
 // ==== пищалка ======================================
-int8_t constexpr BUZZER_PIN = 10; // пин для подключения пищалки
+int8_t constexpr BUZZER_PIN = 7; // пин для подключения пищалки
 
 #endif
 
@@ -97,7 +100,7 @@ int8_t constexpr LIGHT_SENSOR_PIN = A3;
 #if defined(USE_DS18B20)
 
 // ---- DS18B20 - пин ----------------------
-int8_t constexpr DS18B20_PIN = 8;
+int8_t constexpr DS18B20_PIN = 4;
 
 #elif defined(USE_NTC)
 
