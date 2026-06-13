@@ -112,7 +112,6 @@
 
 ### Использованные сторонние библиотеки
 
-**shTaskManager.h** - https://github.com/VAleSh-Soft/shTaskManager<br>
 **shSimpleClock.h** - https://github.com/VAleSh-Soft/shSimpleClock<br>
 
 Для работы с экраном используется библиотека<br>
