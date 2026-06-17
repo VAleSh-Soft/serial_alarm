@@ -270,7 +270,7 @@ void SerialAlarm::init(clkDateTime _time)
   uint32_t tm = _time.hour() * 3600ul + _time.minute() * 60ul + _time.second();
   if (p2 < p1)
   {
-    p2 += MAX_DATA + 1;
+    tm += (MAX_DATA + 1) * 60ul;
   }
 
   uint16_t x = p1;
@@ -340,11 +340,6 @@ void SerialAlarm::tick(clkDateTime _time)
         next_point = getAlarmPoint1();
       }
     }
-  }
-
-  if (state == ALARM_YES)
-  {
-    /* code */
   }
 }
 
