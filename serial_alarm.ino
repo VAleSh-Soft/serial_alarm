@@ -26,6 +26,8 @@ void checkButton()
     }
   }
 
+  static bool time_changed = false;
+
   switch (saClock.getDisplayMode())
   {
   // в режиме показа времени
@@ -47,19 +49,26 @@ void checkButton()
       }
       break;
     }
-    break;
-
-  // в режиме настройки будильника
-  case DISPLAY_MODE_CUSTOM_2:
-    // кнопка Set
-    switch (saClock.getButtonState(CLK_BTN_SET))
+    if (time_changed)
     {
-    // удержание нажатой кнопки для возврата в режим показа времени
-    case BTN_DBLCLICK:
-      returnToDefMode();
-      break;
+      // переинициализировать будильник, если время было изменено
+      saAlarm.init(saClock.getCurrentDateTime());
+      time_changed = false;
     }
     break;
+
+  // в режиме настройки времени
+  case DISPLAY_MODE_SET_HOUR:
+  case DISPLAY_MODE_SET_MINUTE:
+    // кнопка Set
+    if (saClock.getButtonFlag(CLK_BTN_SET) == CLK_BTN_FLAG_EXIT ||
+        saClock.getButtonFlag(CLK_BTN_SET) == CLK_BTN_FLAG_NEXT)
+    {
+      // если время было изменено, взвести флаг для переинициализации будильника
+      time_changed = true;
+    }
+    break;
+
   default:
     break;
   }
@@ -67,7 +76,7 @@ void checkButton()
 
 // ===================================================
 
-void returnToDefMode()
+void returnToDefaultMode()
 {
   switch (saClock.getDisplayMode())
   {
@@ -77,7 +86,7 @@ void returnToDefMode()
   default:
     break;
   }
-  saClock.stopAdditionalTask(return_to_default_mode);
+  saClock.stopAdditionalTask(return_to_def_mode);
 }
 
 void setDisplayData()
@@ -157,7 +166,7 @@ void setup()
   saClock.init();
   saAlarm.init(saClock.getCurrentDateTime());
 
-  return_to_default_mode = saClock.addAdditionalTask(AUTO_EXIT_TIMEOUT * 1000ul, returnToDefMode, false);
+  return_to_def_mode = saClock.addAdditionalTask(AUTO_EXIT_TIMEOUT * 1000ul, returnToDefaultMode, false);
   show_alarm_setting_mode = saClock.addAdditionalTask(100ul, showAlarmSetting, false);
   display_guard = saClock.addAdditionalTask(50ul, setDisplayData);
   alarm_guard = saClock.addAdditionalTask(200ul, checkAlarm);

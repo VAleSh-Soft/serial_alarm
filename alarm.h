@@ -8,7 +8,7 @@
  *
  *        несмотря на использование библиотеки shSimpleClock, использовать
  *        встроенный в нее будильник не получится, т.к. он рассчитан на одно
- *        время срабатывания, а нам нужно время начала и окончания; 
+ *        время срабатывания, а нам нужно время начала и окончания;
  *
  * @version 1.0
  * @date 2026-06-09
@@ -187,6 +187,11 @@ bool SerialAlarm::checkForInterval(uint16_t _time)
   uint16_t p1 = getAlarmPoint1();
   uint16_t p2 = getAlarmPoint2();
 
+  if (_time >= MAX_DATA + 1)
+  {
+    _time -= MAX_DATA + 1;
+  }
+
   if (p1 == p2)
   {
     return (false);
@@ -238,11 +243,11 @@ SerialAlarm::SerialAlarm(uint8_t _red_pin, uint8_t _green_pin, uint16_t _eeprom_
   }
   if (read_eeprom_16(ALARM_POINT_1) > MAX_DATA)
   {
-    write_eeprom_16(ALARM_POINT_1, 0);
+    write_eeprom_16(ALARM_POINT_1, (uint16_t)8 * 60);
   }
   if (read_eeprom_16(ALARM_POINT_2) > MAX_DATA)
   {
-    write_eeprom_16(ALARM_POINT_2, 0);
+    write_eeprom_16(ALARM_POINT_2, 17 * 60 + 1);
   }
   if ((read_eeprom_16(ALARM_INTERVAL) > MAX_INTERVAL) ||
       (read_eeprom_16(ALARM_INTERVAL) < MIN_INTERVAL))
@@ -255,17 +260,7 @@ SerialAlarm::SerialAlarm(uint8_t _red_pin, uint8_t _green_pin, uint16_t _eeprom_
 void SerialAlarm::init(clkDateTime _time)
 {
   uint16_t p1 = getAlarmPoint1();
-  if (p1 > MAX_DATA)
-  {
-    p1 = (uint16_t)8 * 60;
-    setAlarmPoint1(p1);
-  }
   uint16_t p2 = getAlarmPoint2();
-  if (p2 > MAX_DATA)
-  {
-    p2 = (uint16_t)17 * 60 + 1;
-    setAlarmPoint2(p2);
-  }
 
   uint32_t tm = _time.hour() * 3600ul + _time.minute() * 60ul + _time.second();
   if (p2 < p1)
@@ -275,11 +270,6 @@ void SerialAlarm::init(clkDateTime _time)
 
   uint16_t x = p1;
   uint16_t it = getAlarmInterval();
-  if (it > MAX_INTERVAL || it < MIN_INTERVAL)
-  {
-    it = MIN_INTERVAL;
-    setAlarmInterval(it);
-  }
 
   while (x * 60ul < tm)
   {
