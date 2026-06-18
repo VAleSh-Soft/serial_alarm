@@ -86,7 +86,12 @@ void returnToDefaultMode()
   default:
     break;
   }
-  saClock.stopAdditionalTask(return_to_def_mode);
+  saClock.stopTask(return_to_def_mode);
+
+  if (clkTasks.getTaskState(clkTasks.return_to_default_mode))
+  {
+    clkTasks.taskExes(clkTasks.return_to_default_mode, false);
+  }
 }
 
 void setDisplayData()
@@ -94,13 +99,13 @@ void setDisplayData()
   switch (saClock.getDisplayMode())
   {
   case DISPLAY_MODE_CUSTOM_1:
-    if (!saClock.getAdditionalTaskState(show_alarm_setting_mode))
+    if (!saClock.getTaskState(show_alarm_setting_mode))
     {
       showAlarmSetting();
     }
     break;
   case DISPLAY_MODE_CUSTOM_2:
-    if (!saClock.getAdditionalTaskState(set_alarm_mode))
+    if (!saClock.getTaskState(set_alarm_mode))
     {
       if (saAlarmDataType == ALARM_DATA_NO)
       {
@@ -117,7 +122,7 @@ void setDisplayData()
 void checkAlarm()
 {
   saAlarm.tick(saClock.getCurrentDateTime());
-  if (saAlarm.getAlarmState() == ALARM_YES && !saClock.getAdditionalTaskState(alarm_buzzer))
+  if (saAlarm.getAlarmState() == ALARM_YES && !saClock.getTaskState(alarm_buzzer))
   {
     runAlarmBuzzer();
   }
@@ -132,28 +137,28 @@ void runAlarmBuzzer()
       {2000, 0, 2000, 0, 2000, 0, 2000, 0},
       {70, 70, 70, 70, 70, 70, 70, 510}};
 
-  if (!saClock.getAdditionalTaskState(alarm_buzzer))
+  if (!saClock.getTaskState(alarm_buzzer))
   {
-    saClock.startAdditionalTask(alarm_buzzer);
+    saClock.startTask(alarm_buzzer);
     n = 0;
     k = 0;
   }
   else if (saAlarm.getAlarmState() != ALARM_YES)
   { // остановка пищалки, если будильник отключен
-    saClock.stopAdditionalTask(alarm_buzzer);
+    saClock.stopTask(alarm_buzzer);
     return;
   }
 
   tone(ALARM_BUZZER_PIN, pgm_read_dword(&pick[0][n]), pgm_read_dword(&pick[1][n]));
-  saClock.setAdditionalTaskInterval(alarm_buzzer, pgm_read_dword(&pick[1][n]), true);
+  saClock.setTaskInterval(alarm_buzzer, pgm_read_dword(&pick[1][n]), true);
   if (++n >= 8)
   {
     n = 0;
     if (++k >= ALARM_DURATION)
     { // остановка пищалки через заданное число секунд
       k = 0;
-      saClock.stopAdditionalTask(alarm_buzzer);
-      saClock.setAdditionalTaskInterval(alarm_buzzer, 50, false);
+      saClock.stopTask(alarm_buzzer);
+      saClock.setTaskInterval(alarm_buzzer, 50, false);
       saAlarm.setAlarmState(ALARM_ON);
     }
   }
@@ -178,4 +183,12 @@ void loop()
 {
   saClock.tick();
   checkButton();
+
+  // это костыль - по какой-то причине не отрабатывает вовзрат в режим показа
+  // времени часов; разбираться пока лень ))
+  if (saClock.getTaskState(clkTasks.return_to_default_mode) &&
+      !saClock.getTaskState(return_to_def_mode))
+  {
+    saClock.startTask(return_to_def_mode);
+  }
 }
