@@ -65,7 +65,19 @@ void checkButton()
         saClock.getButtonFlag(CLK_BTN_SET) == CLK_BTN_FLAG_NEXT)
     {
       // если время было изменено, взвести флаг для переинициализации будильника
+      // что время было изменено, поэтому взводим флаг для переинициализации
+      // будильника
       time_changed = true;
+    }
+    break;
+
+  // режиме вывода настроек будильника
+  case DISPLAY_MODE_CUSTOM_1:
+    // клик кнопкой Set возвращает в режим показа времени
+    if (saClock.getButtonState(CLK_BTN_SET) == BTN_ONECLICK)
+    {
+      saClock.stopTask(show_alarm_setting_mode);
+      saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
     }
     break;
 
@@ -87,11 +99,6 @@ void returnToDefaultMode()
     break;
   }
   saClock.stopTask(return_to_def_mode);
-
-  if (clkTasks.getTaskState(clkTasks.return_to_default_mode))
-  {
-    clkTasks.taskExes(clkTasks.return_to_default_mode, false);
-  }
 }
 
 void setDisplayData()
@@ -183,12 +190,4 @@ void loop()
 {
   saClock.tick();
   checkButton();
-
-  // это костыль - по какой-то причине не отрабатывает вовзрат в режим показа
-  // времени часов; разбираться пока лень ))
-  if (saClock.getTaskState(clkTasks.return_to_default_mode) &&
-      !saClock.getTaskState(return_to_def_mode))
-  {
-    saClock.startTask(return_to_def_mode);
-  }
 }

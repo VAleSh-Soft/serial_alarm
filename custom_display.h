@@ -237,9 +237,8 @@ void showAlarmSetting()
   static uint8_t k = 0;
   // количество циклов вывода информации - если время начала и окончания
   // сигнализации одинаковое - выводится только одно время, иначе выводятся обе
-  // точки и интервал
-  uint8_t rep = (saAlarm.getAlarmPoint1() == saAlarm.getAlarmPoint2()) ? 1 : 3; 
-
+  // точки, интервал и время следующего срабатывания
+  uint8_t rep = (saAlarm.getAlarmPoint1() == saAlarm.getAlarmPoint2()) ? 1 : 4;
 
   if (!saClock.getTaskState(show_alarm_setting_mode))
   {
@@ -263,6 +262,10 @@ void showAlarmSetting()
   case 2:
     m = ALARM_DATA_INTERVAL;
     x = saAlarm.getAlarmInterval();
+    break;
+  case 3:
+    m = ALARM_DATA_NEXT_POINT;
+    x = saAlarm.getNextPoint();
     break;
   }
 
@@ -298,9 +301,10 @@ void showAlarmState(uint8_t _state)
 
 void showSettingType(saAlarmSettingDataType _type)
 {
-  // ALARM_DATA_HOUR_1   - P1:
-  // ALARM_DATA_HOUR_2   - P2:
-  // ALARM_DATA_INTERVAL - It:
+  // ALARM_DATA_HOUR_1     - P1:
+  // ALARM_DATA_HOUR_2     - P2:
+  // ALARM_DATA_INTERVAL   - It:
+  // ALARM_DATA_NEXT_POINT - Pn:
   switch (_type)
   {
   case ALARM_DATA_HOUR_1:
@@ -314,6 +318,10 @@ void showSettingType(saAlarmSettingDataType _type)
   case ALARM_DATA_INTERVAL:
     clkDisplay.setDispData(0, 0b00000110);
     clkDisplay.setDispData(1, 0b11111000);
+    break;
+  case ALARM_DATA_NEXT_POINT:
+    clkDisplay.setDispData(0, 0b01110011);
+    clkDisplay.setDispData(1, 0b11010100);
     break;
   default:
     break;

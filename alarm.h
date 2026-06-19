@@ -104,6 +104,13 @@ public:
   void setOnOffAlarm(bool _state);
 
   /**
+   * @brief получение времени следующего срабатывания будильника
+   * 
+   * @return uint16_t время следующего срабатывания в минутах от начала суток
+   */
+  uint16_t getNextPoint();
+
+  /**
    * @brief получение времени перехода будильника в активный режим
    *
    * @return uint16_t время в минутах от начала суток
@@ -294,6 +301,8 @@ void SerialAlarm::setOnOffAlarm(bool _state)
   write_eeprom_8(ALARM_STATE, (uint8_t)_state);
   state = (AlarmState)_state;
 }
+
+uint16_t SerialAlarm::getNextPoint() { return next_point; }
 
 uint16_t SerialAlarm::getAlarmPoint1() { return (read_eeprom_16(ALARM_POINT_1)); }
 

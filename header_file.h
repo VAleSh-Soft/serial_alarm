@@ -28,7 +28,8 @@ enum saAlarmSettingDataType : uint8_t
   ALARM_DATA_MINUTE_1,
   ALARM_DATA_HOUR_2,
   ALARM_DATA_MINUTE_2,
-  ALARM_DATA_INTERVAL
+  ALARM_DATA_INTERVAL,
+  ALARM_DATA_NEXT_POINT
 };
 
 static saAlarmSettingDataType getNext(const saAlarmSettingDataType current)
