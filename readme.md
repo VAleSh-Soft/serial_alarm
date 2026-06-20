@@ -112,7 +112,7 @@
 
 Кроме **DS3231** можно использовать модули **DS1307**, **PCF8523** или **PCF8563** ([об этом см. здесь](https://github.com/VAleSh-Soft/shSimpleClock/blob/main/docs/rtc.md)).
 
-Пины для подключения экрана, модуля DS3231, кнопок и датчиков температуры и освещенности определены в файле **clockSetting.h** (см. описание библиотеки [shSimpleClock](https://github.com/VAleSh-Soft/shSimpleClock/blob/main/docs/clock_setting.md)). Пины для подключения пищалки и светодиода задаются в файле **header_file.h**.
+Пины для подключения экрана, модуля **RTC**, кнопок и датчиков температуры и освещенности определены в файле **clockSetting.h** (см. описание библиотеки [shSimpleClock](https://github.com/VAleSh-Soft/shSimpleClock/blob/main/docs/clock_setting.md)). Пины для подключения пищалки и светодиода задаются в файле **header_file.h**.
 
 ### Использованные сторонние библиотеки
 
