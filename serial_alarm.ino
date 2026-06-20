@@ -28,6 +28,13 @@ void checkButton()
 
   static bool time_changed = false;
 
+  if (time_changed)
+  {
+    // переинициализировать будильник, если время было изменено
+    saAlarm.init(saClock.getCurrentDateTime());
+    time_changed = false;
+  }
+
   switch (saClock.getDisplayMode())
   {
   // в режиме показа времени
@@ -45,15 +52,9 @@ void checkButton()
       if (saAlarm.getAlarmState() != ALARM_OFF)
       {
         saClock.setDisplayMode(DISPLAY_MODE_CUSTOM_1);
-        saClock.resetButtonState(CLK_BTN_DOWN);
+        saClock.resetButtonState(CLK_BTN_SET);
       }
       break;
-    }
-    if (time_changed)
-    {
-      // переинициализировать будильник, если время было изменено
-      saAlarm.init(saClock.getCurrentDateTime());
-      time_changed = false;
     }
     break;
 
@@ -64,8 +65,8 @@ void checkButton()
     if (saClock.getButtonFlag(CLK_BTN_SET) == CLK_BTN_FLAG_EXIT ||
         saClock.getButtonFlag(CLK_BTN_SET) == CLK_BTN_FLAG_NEXT)
     {
-      // если время было изменено, взвести флаг для переинициализации будильника
-      // что время было изменено, поэтому взводим флаг для переинициализации
+      // если кнопка Set была нажата в режиме настройки времени, считаем, что
+      // время могло быть изменено, поэтому взводим флаг для переинициализации
       // будильника
       time_changed = true;
     }
@@ -78,6 +79,7 @@ void checkButton()
     {
       saClock.stopTask(show_alarm_setting_mode);
       saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
+      saClock.resetButtonState(CLK_BTN_SET);
     }
     break;
 
@@ -85,8 +87,6 @@ void checkButton()
     break;
   }
 }
-
-// ===================================================
 
 void returnToDefaultMode()
 {
@@ -174,7 +174,7 @@ void runAlarmBuzzer()
 // ===================================================
 void setup()
 {
-  saClock.setAdditionalTaskCount(6);
+  saClock.setAdditionalTaskCount(7);
   saClock.init();
   saAlarm.init(saClock.getCurrentDateTime());
 
@@ -184,10 +184,10 @@ void setup()
   alarm_guard = saClock.addAdditionalTask(200ul, checkAlarm);
   alarm_buzzer = saClock.addAdditionalTask(50ul, runAlarmBuzzer, false);
   set_alarm_mode = saClock.addAdditionalTask(100, showAlarmSettingInterface, false);
+  buttons_guard = saClock.addAdditionalTask(1, checkButton);
 }
 
 void loop()
 {
   saClock.tick();
-  checkButton();
 }

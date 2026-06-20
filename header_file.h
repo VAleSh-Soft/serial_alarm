@@ -11,7 +11,8 @@ constexpr uint8_t ALARM_GREEN_PIN = 3;  // пин для подключения 
 #define ALARM_EEPROM_INDEX 50 // индекс в EEPROM для сохранения настроек будильника; индексы 96..99 заняты настройками часов
 
 // ===================================================
-clkHandle return_to_def_mode;  // таймер автовозврата в режим показа времени из любого режима настройки
+clkHandle buttons_guard;           // опрос кнопок
+clkHandle return_to_def_mode;      // таймер автовозврата в режим показа времени из любого режима настройки
 clkHandle display_guard;           // вывод данных будильника на экран
 clkHandle alarm_guard;             // отслеживание будильника
 clkHandle alarm_buzzer;            // пищалка будильника
@@ -71,10 +72,8 @@ saAlarmSettingDataType saAlarmDataType = ALARM_DATA_NO;
 
 shSimpleClock saClock;
 
-// ==== опрос кнопок =================================
-void checkButton();
-
 // ==== задачи =======================================
+void checkButton();
 void returnToDefaultMode();
 void showAlarmSettingInterface();
 void showAlarmSetting();
