@@ -56,6 +56,23 @@ void checkButton()
       }
       break;
     }
+    // кнопка Up
+    switch (saClock.getButtonState(CLK_BTN_UP))
+    {
+    // длинный клик выводит на экран все точки срабатывания будильника
+    case BTN_LONGCLICK:
+      if (saAlarm.getAlarmState() != ALARM_OFF &&
+          (saAlarm.getAlarmPoint1() != saAlarm.getAlarmPoint2()))
+      {
+        saClock.setDisplayMode(DISPLAY_MODE_CUSTOM_1);
+        saAlarmDataType = ALARM_DATA_PONT_LIST;
+        saClock.resetButtonState(CLK_BTN_UP);
+      }
+      break;
+
+    default:
+      break;
+    }
     break;
 
   // в режиме настройки времени

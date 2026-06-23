@@ -235,6 +235,7 @@ void showAlarmSetting()
 {
   static uint8_t n = 0;
   static uint8_t k = 0;
+  static uint16_t y = 0;
   // количество циклов вывода информации - если время начала и окончания
   // сигнализации одинаковое - выводится только одно время, иначе выводятся обе
   // точки, интервал и время следующего срабатывания
@@ -245,39 +246,64 @@ void showAlarmSetting()
     saClock.startTask(show_alarm_setting_mode);
     n = 0;
     k = 0;
-  }
-
-  uint16_t x = 0;
-  saAlarmSettingDataType m = ALARM_DATA_HOUR_1;
-  switch (k)
-  {
-  case 0:
-    m = ALARM_DATA_HOUR_1;
-    x = saAlarm.getAlarmPoint1();
-    break;
-  case 1:
-    m = ALARM_DATA_HOUR_2;
-    x = saAlarm.getAlarmPoint2();
-    break;
-  case 2:
-    m = ALARM_DATA_INTERVAL;
-    x = saAlarm.getAlarmInterval();
-    break;
-  case 3:
-    m = ALARM_DATA_NEXT_POINT;
-    x = saAlarm.getNextPoint();
-    break;
-  }
-
-  (n < 8) ? showSettingType(m) : showTimeData(x / 60, x % 60);
-
-  if (++n > 19)
-  {
-    n = 0;
-    if (++k >= rep)
+    if (saAlarmDataType == ALARM_DATA_PONT_LIST)
     {
-      saClock.stopTask(show_alarm_setting_mode);
-      saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
+      y = saAlarm.getAlarmPoint1();
+    }
+  }
+
+  if (saAlarmDataType == ALARM_DATA_NO)
+  {
+    uint16_t x = 0;
+    saAlarmSettingDataType m = ALARM_DATA_HOUR_1;
+    switch (k)
+    {
+    case 0:
+      m = ALARM_DATA_HOUR_1;
+      x = saAlarm.getAlarmPoint1();
+      break;
+    case 1:
+      m = ALARM_DATA_HOUR_2;
+      x = saAlarm.getAlarmPoint2();
+      break;
+    case 2:
+      m = ALARM_DATA_INTERVAL;
+      x = saAlarm.getAlarmInterval();
+      break;
+    case 3:
+      m = ALARM_DATA_NEXT_POINT;
+      x = saAlarm.getNextPoint();
+      break;
+    }
+
+    (n < 8) ? showSettingType(m) : showTimeData(x / 60, x % 60);
+
+    if (++n > 19)
+    {
+      n = 0;
+      if (++k >= rep)
+      {
+        saClock.stopTask(show_alarm_setting_mode);
+        saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
+      }
+    }
+  }
+  else
+  {
+    (n < 4 || n > 15) ? showSettingType(ALARM_DATA_PONT_LIST, k + 1) : showTimeData(y / 60, y % 60);
+
+    if (++n > 19)
+    {
+      n = 0;
+      k++;
+
+      y += saAlarm.getAlarmInterval();
+      if (!saAlarm.checkForInterval(y))
+      {
+        saClock.stopTask(show_alarm_setting_mode);
+        saAlarmDataType = ALARM_DATA_NO;
+        saClock.setDisplayMode(DISPLAY_MODE_SHOW_TIME);
+      }
     }
   }
 }
@@ -299,7 +325,7 @@ void showAlarmState(uint8_t _state)
   }
 }
 
-void showSettingType(saAlarmSettingDataType _type)
+void showSettingType(saAlarmSettingDataType _type, uint8_t idx)
 {
   // ALARM_DATA_HOUR_1     - P1:
   // ALARM_DATA_HOUR_2     - P2:
@@ -322,6 +348,10 @@ void showSettingType(saAlarmSettingDataType _type)
   case ALARM_DATA_NEXT_POINT:
     clkDisplay.setDispData(0, 0b01110011);
     clkDisplay.setDispData(1, 0b11010100);
+    break;
+  case ALARM_DATA_PONT_LIST:
+    clkDisplay.setDispData(0, 0x00);
+    clkDisplay.setDispData(1, 0x00);
     break;
   default:
     break;

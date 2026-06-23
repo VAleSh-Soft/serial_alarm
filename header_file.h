@@ -30,7 +30,8 @@ enum saAlarmSettingDataType : uint8_t
   ALARM_DATA_HOUR_2,
   ALARM_DATA_MINUTE_2,
   ALARM_DATA_INTERVAL,
-  ALARM_DATA_NEXT_POINT
+  ALARM_DATA_NEXT_POINT,
+  ALARM_DATA_PONT_LIST
 };
 
 static saAlarmSettingDataType getNext(const saAlarmSettingDataType current)
@@ -43,6 +44,8 @@ static saAlarmSettingDataType getNext(const saAlarmSettingDataType current)
   case ALARM_DATA_MINUTE_1:
   case ALARM_DATA_HOUR_2:
   case ALARM_DATA_MINUTE_2:
+  case ALARM_DATA_INTERVAL:
+  case ALARM_DATA_PONT_LIST:
     uint8_t x;
     x = (uint8_t)current;
     return (saAlarmSettingDataType)++x;
@@ -85,7 +88,7 @@ void runAlarmBuzzer();
 void showTimeData(uint8_t hour, uint8_t minute);
 void saveData(uint8_t h, uint8_t m);
 void showAlarmState(uint8_t _state);
-void showSettingType(saAlarmSettingDataType _type);
+void showSettingType(saAlarmSettingDataType _type, uint8_t idx = 0);
 void checkData(uint8_t &dt, uint8_t max, bool toUp);
 void checkData(uint8_t &dt, uint8_t min, uint8_t max, uint8_t x, bool toUp);
 

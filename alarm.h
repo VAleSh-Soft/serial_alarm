@@ -60,8 +60,6 @@ private:
 
   void setNextPoint(uint16_t _time);
 
-  bool checkForInterval(uint16_t _time);
-
   void setLed(uint16_t _time);
 
 public:
@@ -87,6 +85,15 @@ public:
    * @param _state новое значение состояния будильника
    */
   void setAlarmState(AlarmState _state);
+
+  /**
+   * @brief проверка времени на вхождение в интервал
+   * 
+   * @param _time количество минут с начала суток
+   * @return true 
+   * @return false 
+   */
+  bool checkForInterval(uint16_t &_time);
 
   /**
    * @brief получение информации о состоянии будильника - включен/выключен
@@ -189,7 +196,7 @@ void SerialAlarm::setNextPoint(uint16_t _time)
   next_point = (_time < MAX_DATA + 1) ? _time : _time - (MAX_DATA + 1);
 }
 
-bool SerialAlarm::checkForInterval(uint16_t _time)
+bool SerialAlarm::checkForInterval(uint16_t &_time)
 {
   uint16_t p1 = getAlarmPoint1();
   uint16_t p2 = getAlarmPoint2();
