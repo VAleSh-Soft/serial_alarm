@@ -290,7 +290,7 @@ void showAlarmSetting()
   }
   else
   {
-    (n < 4 || n > 15) ? showSettingType(ALARM_DATA_PONT_LIST, k + 1) : showTimeData(y / 60, y % 60);
+    (n < 4 || n > 15) ? showSettingType(ALARM_DATA_PONT_LIST) : showTimeData(y / 60, y % 60);
 
     if (++n > 19)
     {
@@ -325,7 +325,7 @@ void showAlarmState(uint8_t _state)
   }
 }
 
-void showSettingType(saAlarmSettingDataType _type, uint8_t idx)
+void showSettingType(saAlarmSettingDataType _type)
 {
   // ALARM_DATA_HOUR_1     - P1:
   // ALARM_DATA_HOUR_2     - P2:

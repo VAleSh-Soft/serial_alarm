@@ -89,7 +89,7 @@ void checkButton()
     }
     break;
 
-  // режиме вывода настроек будильника
+  // режиме вывода текущих настроек будильника или списка точек срабатывания
   case DISPLAY_MODE_CUSTOM_1:
     // клик кнопкой Set возвращает в режим показа времени
     if (saClock.getButtonState(CLK_BTN_SET) == BTN_ONECLICK)
@@ -122,12 +122,14 @@ void setDisplayData()
 {
   switch (saClock.getDisplayMode())
   {
+  // режим вывода текущих настроек будильника или списка точек срабатывания
   case DISPLAY_MODE_CUSTOM_1:
     if (!saClock.getTaskState(show_alarm_setting_mode))
     {
       showAlarmSetting();
     }
     break;
+  // режим настройки будильника
   case DISPLAY_MODE_CUSTOM_2:
     if (!saClock.getTaskState(set_alarm_mode))
     {
