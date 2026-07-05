@@ -21,10 +21,11 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#define MAX_DATA 1439     // максимальное количество минут для установки будильника (23 ч, 59 мин)
-#define MAX_INTERVAL 180  // максимальный интервал, минут
-#define MIN_INTERVAL 10   // минимальный интервал, минут
-#define ALARM_DURATION 60 // продолжительность сигнала будильника, секунд
+#define MAX_DATA 1439        // максимальное количество минут для установки будильника (23 ч, 59 мин)
+#define MAX_INTERVAL 180     // максимальный интервал, минут
+#define MIN_INTERVAL 10      // минимальный интервал, минут
+#define INTERVAL_INC_STEP 10 // шаг изменения интервала, минут
+#define ALARM_DURATION 60    // продолжительность сигнала будильника, секунд
 
 enum IndexOffset : uint8_t // смещение от стартового индекса в EEPROM для хранения настроек
 /* общий размер настроек - 7 байт */
@@ -89,10 +90,10 @@ public:
 
   /**
    * @brief проверка времени на вхождение в интервал
-   * 
+   *
    * @param _time количество минут с начала суток
-   * @return true 
-   * @return false 
+   * @return true
+   * @return false
    */
   bool checkForInterval(uint16_t &_time);
 
@@ -113,7 +114,7 @@ public:
 
   /**
    * @brief получение времени следующего срабатывания будильника
-   * 
+   *
    * @return uint16_t время следующего срабатывания в минутах от начала суток
    */
   uint16_t getNextPoint();

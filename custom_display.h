@@ -84,7 +84,7 @@ void checkSettingData(uint8_t &h, uint8_t &m, bool dir)
     checkData(h, 1, true);
     break;
   case ALARM_DATA_INTERVAL:
-    checkData(h, MIN_INTERVAL, MAX_INTERVAL, 10, dir);
+    checkData(h, MIN_INTERVAL, MAX_INTERVAL, INTERVAL_INC_STEP, dir);
     break;
   default:
     break;
