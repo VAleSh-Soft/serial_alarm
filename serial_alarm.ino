@@ -193,7 +193,6 @@ void runAlarmBuzzer()
 // ===================================================
 void setup()
 {
-  saClock.setAdditionalTaskCount(7);
   saClock.init();
   saAlarm.init(saClock.getCurrentDateTime());
 

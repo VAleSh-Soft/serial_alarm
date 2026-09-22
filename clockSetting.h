@@ -13,8 +13,8 @@
 #define TM1637_DISPLAY
 
 // ---- пины для подключения индикатора ----
-int8_t constexpr DISPLAY_CLK_PIN = 5; // пин для подключения экрана - CLK
-int8_t constexpr DISPLAY_DAT_PIN = 6; // пин для подключения экрана - DAT
+#define DISPLAY_CLK_PIN 5 // пин для подключения экрана - CLK
+#define DISPLAY_DAT_PIN 6 // пин для подключения экрана - DAT
 
 // ==== кнопки =======================================
 
@@ -51,11 +51,11 @@ uint16_t constexpr TIMEOUT_OF_DBLCLICK = 300;   // интервал двойно
  * если кнопка не будет использоваться, нужно указать -1;
  * в этом случае ее объект не будет создаваться в памяти;
  */
-int8_t constexpr BTN_SET_PIN = 10;  // пин для подключения кнопки Set
-int8_t constexpr BTN_DOWN_PIN = 9;  // пин для подключения кнопки Down
-int8_t constexpr BTN_UP_PIN = 8;    // пин для подключения кнопки Up
-int8_t constexpr BTN_ADD1_PIN = -1; // пин для подключения первой дополнительной кнопки
-int8_t constexpr BTN_ADD2_PIN = -1; // пин для подключения второй дополнительной кнопки
+#define BTN_SET_PIN 10  // пин для подключения кнопки Set
+#define BTN_DOWN_PIN 9  // пин для подключения кнопки Down
+#define BTN_UP_PIN 8    // пин для подключения кнопки Up
+#define BTN_ADD1_PIN -1 // пин для подключения первой дополнительной кнопки
+#define BTN_ADD2_PIN -1 // пин для подключения второй дополнительной кнопки
 
 // ==== дополнительные опции ========================
 
@@ -71,7 +71,7 @@ int8_t constexpr BTN_ADD2_PIN = -1; // пин для подключения вт
 #if defined(USE_BUZZER_FOR_BUTTON)
 
 // ==== пищалка ======================================
-int8_t constexpr BUZZER_PIN = 7; // пин для подключения пищалки
+#define BUZZER_PIN 7 // пин для подключения пищалки
 
 #endif
 
@@ -83,7 +83,7 @@ int8_t constexpr BUZZER_PIN = 7; // пин для подключения пищ�
 #if defined(USE_LIGHT_SENSOR)
 
 // ---- датчик освещенности - пин ----------
-int8_t constexpr LIGHT_SENSOR_PIN = A3;
+#define LIGHT_SENSOR_PIN A3
 
 #endif
 
@@ -100,7 +100,7 @@ int8_t constexpr LIGHT_SENSOR_PIN = A3;
 #if defined(USE_DS18B20)
 
 // ---- DS18B20 - пин ----------------------
-int8_t constexpr DS18B20_PIN = 4;
+#define DS18B20_PIN 4
 
 #elif defined(USE_NTC)
 
@@ -110,7 +110,7 @@ uint16_t constexpr BALANCE_RESISTOR = 9850; // точное сопротивле
 uint16_t constexpr BETA_COEFFICIENT = 3950; // бета-коэффициент датчика, см. данные производителя; если данных производителя нет, коэффициент можно расчитать, исходя из бета-формулы расчета температуры, которую можно легко найти в интернете
 
 // ---- NTC термистор - пин---------------
-int8_t constexpr NTC_PIN = A0;
+#define NTC_PIN A0
 
 #endif
 #endif
@@ -124,6 +124,8 @@ int8_t constexpr NTC_PIN = A0;
 uint8_t constexpr BIT_DEPTH = 10; // разрядность АЦП используемого микроконтроллера; для Ардуино UNO, Nano, Pro Mini BIT_DEPTH = 10
 
 #endif
+
+#define ADDITIONAL_TASKS_COUNT 7 // количество дополнительных (пользовательских) задач
 
 // ==== настройки EEPROM =============================
 
