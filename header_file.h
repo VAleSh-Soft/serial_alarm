@@ -1,6 +1,5 @@
 #pragma once
 #include <Arduino.h>
-#include "header_file.h"
 
 // ==== пины =========================================
 constexpr uint8_t ALARM_BUZZER_PIN = 7; // пин для подключения пищалки

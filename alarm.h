@@ -159,7 +159,7 @@ public:
    *
    * @param _time устанавливаемый интервал в минутах
    */
-  void setAlarmInterval(uint8_t _time);
+  void setAlarmInterval(uint16_t _time);
 
   /**
    * @brief проверка текущего состояния будильника
@@ -323,11 +323,11 @@ void SerialAlarm::setAlarmPoint2(uint16_t _time) { write_eeprom_16(ALARM_POINT_2
 
 uint16_t SerialAlarm::getAlarmInterval() { return (read_eeprom_16(ALARM_INTERVAL)); }
 
-void SerialAlarm::setAlarmInterval(uint8_t _time)
+void SerialAlarm::setAlarmInterval(uint16_t _time)
 {
-  if (_time > 180)
+  if (_time > MAX_INTERVAL)
   {
-    _time = 180;
+    _time = MAX_INTERVAL;
   }
   write_eeprom_16(ALARM_INTERVAL, _time);
 }
