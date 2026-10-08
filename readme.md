@@ -1,4 +1,4 @@
-## serial_alarm v1.5.10
+## serial_alarm v1.5.11
 
 ![alt text](docs/main.png)
 
